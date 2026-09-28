@@ -1,0 +1,6 @@
+{
+  "name": "Salary Sheet Generator - Unity Earning Platform",
+  "description": "Automated professional salary sheet generator and payroll management system for Unity Earning Platform with real-time calculations and PDF/image export.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

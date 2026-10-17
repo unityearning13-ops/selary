@@ -13,6 +13,8 @@ import {
 import {
   downloadSalarySheetImage,
   downloadSalarySheetPDF,
+  downloadRankingPosterImage,
+  downloadRankingPosterPDF,
   printSalarySheet,
 } from './utils/exportUtils';
 import { Navbar, ViewMode } from './components/Navbar';
@@ -22,6 +24,8 @@ import { AdminTableEditor } from './components/AdminTableEditor';
 import { DocumentSettingsModal } from './components/DocumentSettingsModal';
 import { ReferenceViewerModal } from './components/ReferenceViewerModal';
 import { ClearAllModal } from './components/ClearAllModal';
+import { RawDataImportSection } from './components/RawDataImportSection';
+import { RankingSection } from './components/RankingSection';
 import {
   Eye,
   Edit3,
@@ -36,6 +40,12 @@ import {
   Maximize2,
   ZoomIn,
   ZoomOut,
+  Trophy,
+  FileText,
+  Image as ImageIcon,
+  Users,
+  Crown,
+  Award,
 } from 'lucide-react';
 
 export default function App() {
@@ -89,6 +99,7 @@ export default function App() {
   });
   const [isDownloadingPDF, setIsDownloadingPDF] = useState(false);
   const [isDownloadingImage, setIsDownloadingImage] = useState(false);
+  const [salaryPreviewFilter, setSalaryPreviewFilter] = useState<'all' | 'leaders' | 'trainers'>('all');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isRulesOpen, setIsRulesOpen] = useState(false);
   const [isAllClearOpen, setIsAllClearOpen] = useState(false);
@@ -177,40 +188,108 @@ export default function App() {
     }, 3500);
   };
 
+  const handleImportTeamLeaders = (newEmployees: Employee[], mode: 'replace' | 'append') => {
+    if (mode === 'replace') {
+      setTeamLeaders(newEmployees);
+      showToast(`টিম লিডার তালিকায় ${newEmployees.length} জন নতুনভাবে সেট হয়েছে!`);
+    } else {
+      setTeamLeaders((prev) => [...prev, ...newEmployees]);
+      showToast(`টিম লিডার তালিকায় আরও ${newEmployees.length} জন যুক্ত হয়েছে!`);
+    }
+  };
+
+  const handleImportTeamTrainers = (newEmployees: Employee[], mode: 'replace' | 'append') => {
+    if (mode === 'replace') {
+      setTeamTrainers(newEmployees);
+      showToast(`টিম ট্রেইনার তালিকায় ${newEmployees.length} জন নতুনভাবে সেট হয়েছে!`);
+    } else {
+      setTeamTrainers((prev) => [...prev, ...newEmployees]);
+      showToast(`টিম ট্রেইনার তালিকায় আরও ${newEmployees.length} জন যুক্ত হয়েছে!`);
+    }
+  };
+
   // 4. Download Handlers
-  const handleDownloadPDF = async () => {
+  const handleDownloadSalarySheet = async (
+    target: 'all' | 'leaders' | 'trainers' = salaryPreviewFilter,
+    format: 'pdf' | 'image'
+  ) => {
     try {
-      setIsDownloadingPDF(true);
-      showToast('Generating official salary sheet PDF...');
+      if (format === 'pdf') setIsDownloadingPDF(true);
+      else setIsDownloadingImage(true);
+
+      const elementId =
+        target === 'leaders'
+          ? 'salary-sheet-document-export-leaders'
+          : target === 'trainers'
+          ? 'salary-sheet-document-export-trainers'
+          : 'salary-sheet-document-export-all';
+
+      const label =
+        target === 'leaders'
+          ? 'টিম লিডার'
+          : target === 'trainers'
+          ? 'টিম ট্রেইনার'
+          : 'উভয় একসাথে (সম্পূর্ণ)';
+
+      showToast(`${label} স্যালারি শিট ${format === 'pdf' ? 'PDF' : 'ইমেজ'} তৈরি হচ্ছে...`);
       const cleanPeriod = metadata.periodMonth.replace(/\s+/g, '_');
-      await downloadSalarySheetPDF(
-        'salary-sheet-document-export',
-        `Unity_Earning_Platform_Salary_Sheet_${cleanPeriod}.pdf`
-      );
-      showToast('PDF downloaded successfully!');
+      const filename = `Unity_Earning_Salary_Sheet_${target.toUpperCase()}_${cleanPeriod}`;
+
+      if (format === 'pdf') {
+        await downloadSalarySheetPDF(elementId, `${filename}.pdf`);
+      } else {
+        await downloadSalarySheetImage(elementId, `${filename}.png`);
+      }
+
+      showToast(`${label} স্যালারি শিট (${format === 'pdf' ? 'PDF' : 'PNG'}) সফলভাবে ডাউনলোড হয়েছে!`);
     } catch (err) {
-      console.error('PDF Generation Error:', err);
-      showToast('Failed to generate PDF. Please try again.');
+      console.error('Salary Sheet Download Error:', err);
+      showToast('ডাউনলোডে সমস্যা হয়েছে। আবার চেষ্টা করুন।');
     } finally {
       setIsDownloadingPDF(false);
+      setIsDownloadingImage(false);
+    }
+  };
+
+  const handleDownloadPDF = async () => {
+    if (viewMode === 'ranking') {
+      try {
+        setIsDownloadingPDF(true);
+        showToast('Generating official ranking poster PDF...');
+        await downloadRankingPosterPDF(
+          'ranking-poster-export',
+          `Unity_Earning_Ranking_Leaderboard_${new Date().toISOString().slice(0, 10)}.pdf`
+        );
+        showToast('Ranking PDF downloaded successfully!');
+      } catch (err) {
+        console.error('PDF Generation Error:', err);
+        showToast('Failed to generate PDF. Please try again.');
+      } finally {
+        setIsDownloadingPDF(false);
+      }
+    } else {
+      await handleDownloadSalarySheet(salaryPreviewFilter, 'pdf');
     }
   };
 
   const handleDownloadImage = async () => {
-    try {
-      setIsDownloadingImage(true);
-      showToast('Capturing high-resolution salary sheet image...');
-      const cleanPeriod = metadata.periodMonth.replace(/\s+/g, '_');
-      await downloadSalarySheetImage(
-        'salary-sheet-document-export',
-        `Unity_Earning_Platform_Salary_Sheet_${cleanPeriod}.png`
-      );
-      showToast('Salary sheet image downloaded successfully!');
-    } catch (err) {
-      console.error('Image Generation Error:', err);
-      showToast('Failed to generate image. Please try again.');
-    } finally {
-      setIsDownloadingImage(false);
+    if (viewMode === 'ranking') {
+      try {
+        setIsDownloadingImage(true);
+        showToast('Capturing high-resolution ranking poster image...');
+        await downloadRankingPosterImage(
+          'ranking-poster-export',
+          `Unity_Earning_Ranking_Leaderboard_${new Date().toISOString().slice(0, 10)}.png`
+        );
+        showToast('Ranking poster image downloaded successfully!');
+      } catch (err) {
+        console.error('Image Generation Error:', err);
+        showToast('Failed to generate image. Please try again.');
+      } finally {
+        setIsDownloadingImage(false);
+      }
+    } else {
+      await handleDownloadSalarySheet(salaryPreviewFilter, 'image');
     }
   };
 
@@ -271,6 +350,7 @@ export default function App() {
         onViewModeChange={setViewMode}
         onDownloadPDF={handleDownloadPDF}
         onDownloadImage={handleDownloadImage}
+        onDownloadSalarySheet={handleDownloadSalarySheet}
         onPrint={handlePrint}
         onOpenSettings={() => setIsSettingsOpen(true)}
         onAllClear={() => setIsAllClearOpen(true)}
@@ -298,6 +378,20 @@ export default function App() {
           </div>
 
           <div className="flex items-center gap-2 flex-wrap">
+            {/* RANKING SECTION BUTTON */}
+            <button
+              onClick={() => setViewMode(viewMode === 'ranking' ? 'preview' : 'ranking')}
+              className={`cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-black transition-all shadow-2xs ${
+                viewMode === 'ranking'
+                  ? 'bg-amber-500 text-slate-950 border border-amber-600'
+                  : 'bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300'
+              }`}
+              title="Go to Leaderboard & Ranking Section"
+            >
+              <Trophy className="w-3.5 h-3.5 text-amber-600 fill-current" />
+              <span>🏆 {viewMode === 'ranking' ? 'ডকুমেন্ট ভিউ' : 'র‍্যাঙ্কিং সেকশন'}</span>
+            </button>
+
             {/* ALL CLEAR BUTTON */}
             <button
               onClick={() => setIsAllClearOpen(true)}
@@ -337,15 +431,96 @@ export default function App() {
         {/* View Layouts */}
         {viewMode === 'preview' && (
           <div className="space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between bg-white px-4 py-3 rounded-lg border border-slate-200 shadow-2xs no-print gap-3 text-xs">
-              <div className="flex items-center gap-2 text-slate-600">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span className="font-extrabold text-slate-900">Official Salary Sheet Preview</span>
-                <span className="text-slate-300">|</span>
-                <span className="text-slate-500 hidden md:inline">Ready for Official Records & Distribution</span>
+            {/* Filter & Export Bar for Preview */}
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between bg-white px-4 py-3 rounded-xl border border-slate-200 shadow-2xs no-print gap-3 text-xs">
+              {/* Separate & Combined Filter Buttons */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="font-extrabold text-slate-800 flex items-center gap-1.5">
+                  <FileText className="w-4 h-4 text-blue-600" />
+                  <span>স্যালারি শিট প্রদর্শন:</span>
+                </span>
+                <div className="flex items-center bg-slate-100 p-0.5 rounded-lg border border-slate-200 text-xs font-bold">
+                  <button
+                    onClick={() => setSalaryPreviewFilter('all')}
+                    className={`cursor-pointer px-3 py-1.5 rounded-md transition-all flex items-center gap-1.5 ${
+                      salaryPreviewFilter === 'all'
+                        ? 'bg-blue-600 text-white shadow-xs font-black'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    <Users className="w-3.5 h-3.5" />
+                    <span>উভয় একসাথে ({teamLeaders.length + teamTrainers.length})</span>
+                  </button>
+                  <button
+                    onClick={() => setSalaryPreviewFilter('leaders')}
+                    className={`cursor-pointer px-3 py-1.5 rounded-md transition-all flex items-center gap-1.5 ${
+                      salaryPreviewFilter === 'leaders'
+                        ? 'bg-blue-600 text-white shadow-xs font-black'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    <Crown className="w-3.5 h-3.5 text-amber-500" />
+                    <span>শুধু টিম লিডার ({teamLeaders.length})</span>
+                  </button>
+                  <button
+                    onClick={() => setSalaryPreviewFilter('trainers')}
+                    className={`cursor-pointer px-3 py-1.5 rounded-md transition-all flex items-center gap-1.5 ${
+                      salaryPreviewFilter === 'trainers'
+                        ? 'bg-blue-600 text-white shadow-xs font-black'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    <Award className="w-3.5 h-3.5 text-emerald-500" />
+                    <span>শুধু টিম ট্রেইনার ({teamTrainers.length})</span>
+                  </button>
+                </div>
               </div>
 
-              <div className="flex items-center gap-2 flex-wrap justify-between sm:justify-end">
+              {/* Action Buttons & Zoom Controls */}
+              <div className="flex items-center gap-2 flex-wrap justify-between lg:justify-end">
+                {/* Direct Download for Current View */}
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={() => handleDownloadSalarySheet(salaryPreviewFilter, 'pdf')}
+                    disabled={isDownloadingPDF}
+                    className="cursor-pointer inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold bg-rose-600 hover:bg-rose-500 text-white shadow-2xs transition-colors disabled:opacity-60"
+                    title="Download active view as PDF"
+                  >
+                    <FileText className="w-3.5 h-3.5" />
+                    <span>
+                      {isDownloadingPDF
+                        ? '...'
+                        : `PDF (${
+                            salaryPreviewFilter === 'leaders'
+                              ? 'টিম লিডার'
+                              : salaryPreviewFilter === 'trainers'
+                              ? 'টিম ট্রেইনার'
+                              : 'উভয়'
+                          })`}
+                    </span>
+                  </button>
+
+                  <button
+                    onClick={() => handleDownloadSalarySheet(salaryPreviewFilter, 'image')}
+                    disabled={isDownloadingImage}
+                    className="cursor-pointer inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-2xs transition-colors disabled:opacity-60"
+                    title="Download active view as PNG image"
+                  >
+                    <ImageIcon className="w-3.5 h-3.5" />
+                    <span>
+                      {isDownloadingImage
+                        ? '...'
+                        : `ইমেজ (${
+                            salaryPreviewFilter === 'leaders'
+                              ? 'টিম লিডার'
+                              : salaryPreviewFilter === 'trainers'
+                              ? 'টিম ট্রেইনার'
+                              : 'উভয়'
+                          })`}
+                    </span>
+                  </button>
+                </div>
+
                 {/* Zoom Controls */}
                 <div className="flex items-center bg-slate-100 rounded-md p-0.5 border border-slate-200">
                   <button
@@ -397,8 +572,15 @@ export default function App() {
                 <OfficialSalaryDocument
                   teamLeaders={teamLeaders}
                   teamTrainers={teamTrainers}
+                  sectionFilter={salaryPreviewFilter}
                   companyName={metadata.companyName}
-                  documentTitle={metadata.documentTitle}
+                  documentTitle={
+                    salaryPreviewFilter === 'leaders'
+                      ? 'SALARY SHEET — TEAM LEADERS'
+                      : salaryPreviewFilter === 'trainers'
+                      ? 'SALARY SHEET — TEAM TRAINERS'
+                      : metadata.documentTitle
+                  }
                   periodMonth={metadata.periodMonth}
                   adminName={metadata.adminName}
                   adminRole={metadata.adminRole}
@@ -517,6 +699,12 @@ export default function App() {
                 }}
                 className="space-y-6"
               >
+                {/* Smart Raw Data Importer with Dual Paste Boxes */}
+                <RawDataImportSection
+                  onImportTeamLeaders={handleImportTeamLeaders}
+                  onImportTeamTrainers={handleImportTeamTrainers}
+                />
+
                 {/* 1. Team Leader Table Editor */}
                 <AdminTableEditor
                   role="leader"
@@ -592,6 +780,10 @@ export default function App() {
                   }}
                   className="space-y-6"
                 >
+                  <RawDataImportSection
+                    onImportTeamLeaders={handleImportTeamLeaders}
+                    onImportTeamTrainers={handleImportTeamTrainers}
+                  />
                   <AdminTableEditor
                     role="leader"
                     employees={teamLeaders}
@@ -648,21 +840,90 @@ export default function App() {
             </div>
           </div>
         )}
+
+        {viewMode === 'ranking' && (
+          <RankingSection
+            teamLeaders={teamLeaders}
+            teamTrainers={teamTrainers}
+            metadata={metadata}
+            currentDateTime={currentDateTime}
+          />
+        )}
       </main>
 
-      {/* Pristine Document Container for High-Res PDF/Image Export & Native Printing */}
+      {/* Pristine Document Container for High-Res PDF/Image Export (Combined, Leaders Only, Trainers Only) */}
       <div
         id="official-export-wrapper"
-        className="fixed top-0 left-0 -z-[9999] pointer-events-none print:static print:z-auto print:pointer-events-auto"
-        style={{ width: '1080px' }}
+        className="pointer-events-none print:static print:z-auto print:pointer-events-auto"
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: '-99999px',
+          width: '1080px',
+          visibility: 'visible',
+          zIndex: 1,
+        }}
         aria-hidden="true"
       >
+        {/* 1. All Together (Combined) */}
         <OfficialSalaryDocument
-          id="salary-sheet-document-export"
+          id="salary-sheet-document-export-all"
+          sectionFilter="all"
           teamLeaders={teamLeaders}
           teamTrainers={teamTrainers}
           companyName={metadata.companyName}
           documentTitle={metadata.documentTitle}
+          periodMonth={metadata.periodMonth}
+          adminName={metadata.adminName}
+          adminRole={metadata.adminRole}
+          generatedDate={currentDateTime.date}
+          generatedTime={currentDateTime.time}
+        />
+
+        {/* 2. Team Leaders Only */}
+        <OfficialSalaryDocument
+          id="salary-sheet-document-export-leaders"
+          sectionFilter="leaders"
+          teamLeaders={teamLeaders}
+          teamTrainers={teamTrainers}
+          companyName={metadata.companyName}
+          documentTitle="SALARY SHEET — TEAM LEADERS"
+          periodMonth={metadata.periodMonth}
+          adminName={metadata.adminName}
+          adminRole={metadata.adminRole}
+          generatedDate={currentDateTime.date}
+          generatedTime={currentDateTime.time}
+        />
+
+        {/* 3. Team Trainers Only */}
+        <OfficialSalaryDocument
+          id="salary-sheet-document-export-trainers"
+          sectionFilter="trainers"
+          teamLeaders={teamLeaders}
+          teamTrainers={teamTrainers}
+          companyName={metadata.companyName}
+          documentTitle="SALARY SHEET — TEAM TRAINERS"
+          periodMonth={metadata.periodMonth}
+          adminName={metadata.adminName}
+          adminRole={metadata.adminRole}
+          generatedDate={currentDateTime.date}
+          generatedTime={currentDateTime.time}
+        />
+
+        {/* 4. Active view alias for default calls */}
+        <OfficialSalaryDocument
+          id="salary-sheet-document-export"
+          sectionFilter={salaryPreviewFilter}
+          teamLeaders={teamLeaders}
+          teamTrainers={teamTrainers}
+          companyName={metadata.companyName}
+          documentTitle={
+            salaryPreviewFilter === 'leaders'
+              ? 'SALARY SHEET — TEAM LEADERS'
+              : salaryPreviewFilter === 'trainers'
+              ? 'SALARY SHEET — TEAM TRAINERS'
+              : metadata.documentTitle
+          }
           periodMonth={metadata.periodMonth}
           adminName={metadata.adminName}
           adminRole={metadata.adminRole}

@@ -15,23 +15,29 @@ export const AdminVerification: React.FC<AdminVerificationProps> = ({
   adminRole = 'Admin',
 }) => {
   return (
-    <div className="mt-8 pt-5 border-t border-slate-300 page-break-inside-avoid">
+    <div className="mt-8 pt-5 page-break-inside-avoid" style={{ borderTop: '1px solid #cbd5e1' }}>
       <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-6 px-2">
-        
         {/* Left Side: Verified & Approved by Admin (Clean, slim & elegant) */}
         <div className="space-y-1.5 text-left">
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-emerald-50 text-emerald-800 text-xs font-bold border border-emerald-200">
-            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+          <div
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-bold border"
+            style={{
+              backgroundColor: '#ecfdf5',
+              color: '#065f46',
+              borderColor: '#a7f3d0',
+            }}
+          >
+            <CheckCircle2 className="w-3.5 h-3.5 text-[#059669] shrink-0" />
             <span>Verified & Approved by Admin</span>
           </div>
 
-          <div className="text-[11px] text-slate-500 font-medium">
-            <span>Date: <strong className="text-slate-700 font-semibold">{generatedDate}</strong></span>
+          <div className="text-[11px] text-[#64748b] font-medium">
+            <span>Date: <strong className="text-[#334155] font-semibold">{generatedDate}</strong></span>
             <span className="mx-2">•</span>
-            <span>Time: <strong className="text-slate-700 font-semibold">{generatedTime}</strong></span>
+            <span>Time: <strong className="text-[#334155] font-semibold">{generatedTime}</strong></span>
           </div>
 
-          <div className="text-[10px] text-slate-400 font-medium uppercase tracking-wider">
+          <div className="text-[10px] text-[#94a3b8] font-bold uppercase tracking-wider">
             Unity Earning E-Learning Platform
           </div>
         </div>
@@ -63,17 +69,16 @@ export const AdminVerification: React.FC<AdminVerificationProps> = ({
           </div>
 
           {/* Thin clean signature line */}
-          <div className="w-48 h-px bg-slate-400 mt-1 mb-1.5"></div>
+          <div className="w-48 h-px mt-1 mb-1.5" style={{ backgroundColor: '#94a3b8' }}></div>
 
           {/* Admin Name & Designation */}
-          <div className="text-xs font-black text-slate-900 tracking-wider uppercase">
+          <div className="text-xs font-black text-[#0f172a] tracking-wider uppercase">
             {adminName}
           </div>
-          <div className="text-[11px] font-semibold text-slate-600">
+          <div className="text-[11px] font-semibold text-[#475569]">
             {adminRole || 'Admin'}
           </div>
         </div>
-
       </div>
     </div>
   );

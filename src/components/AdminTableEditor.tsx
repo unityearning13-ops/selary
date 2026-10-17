@@ -54,7 +54,7 @@ export const AdminTableEditor: React.FC<AdminTableEditorProps> = ({
       // Auto-update balance if not manually overridden
       if (!currentEmp.isBalanceOverridden) {
         const conv = parseNumber(currentEmp.convert);
-        currentEmp.balance = conv * effectiveRate;
+        currentEmp.balance = conv === 0 ? '' : conv * effectiveRate;
       }
     } else if (field === 'balance') {
       if (value === '') {
@@ -101,13 +101,13 @@ export const AdminTableEditor: React.FC<AdminTableEditorProps> = ({
     const newEmp: Employee = {
       id: newId,
       name: rawName,
-      convert: 0,
-      balance: 0,
+      convert: '',
+      balance: '',
       isBalanceOverridden: false,
-      target: isLeader ? 40 : 20,
-      bonus: 0,
-      incentive: 0,
-      fine: 0,
+      target: '',
+      bonus: '',
+      incentive: '',
+      fine: '',
     };
 
     onUpdateEmployees([...employees, newEmp]);
@@ -402,9 +402,10 @@ export const AdminTableEditor: React.FC<AdminTableEditorProps> = ({
                       <input
                         type="number"
                         min="0"
-                        value={emp.convert}
+                        value={emp.convert === 0 || emp.convert === '' ? '' : emp.convert}
+                        onFocus={(e) => e.target.select()}
                         onChange={(e) => handleFieldChange(index, 'convert', e.target.value)}
-                        placeholder="0"
+                        placeholder=""
                         className="w-full px-2 py-1.5 text-xs font-bold text-center rounded border border-blue-300 bg-white text-blue-950 focus:border-blue-600 focus:ring-1 focus:ring-blue-500"
                       />
                     </td>
@@ -415,9 +416,10 @@ export const AdminTableEditor: React.FC<AdminTableEditorProps> = ({
                         <input
                           type="number"
                           min="0"
-                          value={emp.balance}
+                          value={emp.balance === 0 || emp.balance === '' ? '' : emp.balance}
+                          onFocus={(e) => e.target.select()}
                           onChange={(e) => handleFieldChange(index, 'balance', e.target.value)}
-                          placeholder={String(autoBalance)}
+                          placeholder={autoBalance > 0 ? String(autoBalance) : ''}
                           className={`w-full px-2 py-1.5 text-xs font-black text-right rounded border transition-colors ${
                             emp.isBalanceOverridden
                               ? 'border-amber-400 bg-amber-50 text-amber-950 focus:ring-1 focus:ring-amber-500'
@@ -436,7 +438,7 @@ export const AdminTableEditor: React.FC<AdminTableEditorProps> = ({
                         )}
                       </div>
                       <div className="flex items-center justify-between text-[10px] text-sky-800 mt-0.5 px-1 font-semibold">
-                        <span>{emp.isBalanceOverridden ? 'Manual' : `Auto: ৳${autoBalance}`}</span>
+                        <span>{emp.isBalanceOverridden ? 'Manual' : (autoBalance > 0 ? `Auto: ৳${autoBalance}` : 'Auto')}</span>
                       </div>
                     </td>
 
@@ -445,9 +447,10 @@ export const AdminTableEditor: React.FC<AdminTableEditorProps> = ({
                       <input
                         type="number"
                         min="0"
-                        value={emp.target}
+                        value={emp.target === 0 || emp.target === '' ? '' : emp.target}
+                        onFocus={(e) => e.target.select()}
                         onChange={(e) => handleFieldChange(index, 'target', e.target.value)}
-                        placeholder="0"
+                        placeholder=""
                         className="w-full px-2 py-1.5 text-xs text-center rounded border border-slate-300 bg-white text-slate-800 focus:border-slate-500 focus:ring-1 focus:ring-slate-400"
                       />
                     </td>
@@ -457,9 +460,10 @@ export const AdminTableEditor: React.FC<AdminTableEditorProps> = ({
                       <input
                         type="number"
                         min="0"
-                        value={emp.bonus}
+                        value={emp.bonus === 0 || emp.bonus === '' ? '' : emp.bonus}
+                        onFocus={(e) => e.target.select()}
                         onChange={(e) => handleFieldChange(index, 'bonus', e.target.value)}
-                        placeholder="0"
+                        placeholder=""
                         className="w-full px-2 py-1.5 text-xs text-center font-bold rounded border border-amber-300 bg-white text-amber-950 focus:border-amber-600 focus:ring-1 focus:ring-amber-500"
                       />
                     </td>
@@ -469,9 +473,10 @@ export const AdminTableEditor: React.FC<AdminTableEditorProps> = ({
                       <input
                         type="number"
                         min="0"
-                        value={emp.incentive}
+                        value={emp.incentive === 0 || emp.incentive === '' ? '' : emp.incentive}
+                        onFocus={(e) => e.target.select()}
                         onChange={(e) => handleFieldChange(index, 'incentive', e.target.value)}
-                        placeholder="0"
+                        placeholder=""
                         className="w-full px-2 py-1.5 text-xs text-right font-bold rounded border border-purple-300 bg-white text-purple-950 focus:border-purple-600 focus:ring-1 focus:ring-purple-500"
                       />
                     </td>
@@ -481,9 +486,10 @@ export const AdminTableEditor: React.FC<AdminTableEditorProps> = ({
                       <input
                         type="number"
                         min="0"
-                        value={emp.fine}
+                        value={emp.fine === 0 || emp.fine === '' ? '' : emp.fine}
+                        onFocus={(e) => e.target.select()}
                         onChange={(e) => handleFieldChange(index, 'fine', e.target.value)}
-                        placeholder="0"
+                        placeholder=""
                         className="w-full px-2 py-1.5 text-xs text-center font-black rounded border border-red-400 bg-[#fff5f5] text-rose-700 placeholder-red-300 focus:border-red-600 focus:ring-1 focus:ring-red-400"
                       />
                     </td>

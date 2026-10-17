@@ -32,3 +32,15 @@ export interface SalarySheetMetadata {
   verificationStatus: string;
   customNotes?: string;
 }
+
+export interface RankingItem {
+  id: string;
+  name: string;
+  emailOrPhone?: string;
+  balance: number | '';
+  convert: number;
+  role: EmployeeRole;
+  rank?: number;
+}
+
+export type RankingFrameRatio = '9:16' | '4:5' | 'a4';

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   FileText,
   Image as ImageIcon,
@@ -10,15 +10,21 @@ import {
   Layers,
   Loader2,
   Trash2,
+  Trophy,
+  ChevronDown,
+  Crown,
+  Award,
+  Users,
 } from 'lucide-react';
 
-export type ViewMode = 'both' | 'editor' | 'preview';
+export type ViewMode = 'both' | 'editor' | 'preview' | 'ranking';
 
 interface NavbarProps {
   viewMode: ViewMode;
   onViewModeChange: (mode: ViewMode) => void;
   onDownloadPDF: () => void;
   onDownloadImage: () => void;
+  onDownloadSalarySheet?: (target: 'all' | 'leaders' | 'trainers', format: 'pdf' | 'image') => void;
   onPrint: () => void;
   onOpenSettings: () => void;
   onAllClear: () => void;
@@ -31,12 +37,27 @@ export const Navbar: React.FC<NavbarProps> = ({
   onViewModeChange,
   onDownloadPDF,
   onDownloadImage,
+  onDownloadSalarySheet,
   onPrint,
   onOpenSettings,
   onAllClear,
   isDownloadingPDF,
   isDownloadingImage,
 }) => {
+  const [isPdfMenuOpen, setIsPdfMenuOpen] = useState(false);
+  const [isImageMenuOpen, setIsImageMenuOpen] = useState(false);
+
+  const handleSalaryExport = (target: 'all' | 'leaders' | 'trainers', format: 'pdf' | 'image') => {
+    if (onDownloadSalarySheet) {
+      onDownloadSalarySheet(target, format);
+    } else {
+      if (format === 'pdf') onDownloadPDF();
+      else onDownloadImage();
+    }
+    setIsPdfMenuOpen(false);
+    setIsImageMenuOpen(false);
+  };
+
   return (
     <header className="sticky top-0 z-40 bg-slate-900 border-b border-slate-800 text-white shadow-md no-print">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -119,9 +140,21 @@ export const Navbar: React.FC<NavbarProps> = ({
               <Layers className="w-3.5 h-3.5" />
               <span>Split View</span>
             </button>
+
+            <button
+              onClick={() => onViewModeChange('ranking')}
+              className={`cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md transition-all ${
+                viewMode === 'ranking'
+                  ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black shadow-md shadow-amber-500/20'
+                  : 'text-amber-400 hover:text-amber-300 hover:bg-amber-950/40 font-bold'
+              }`}
+            >
+              <Trophy className="w-3.5 h-3.5 fill-current" />
+              <span>🏆 র‍্যাঙ্কিং</span>
+            </button>
           </div>
 
-          {/* Primary Action Buttons: ALL CLEAR, DOWNLOAD PDF, DOWNLOAD IMAGE, PRINT */}
+          {/* Primary Action Buttons: ALL CLEAR, DOWNLOAD PDF (Separate & Combined), DOWNLOAD IMAGE, PRINT */}
           <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
             {/* ALL CLEAR BUTTON */}
             <button
@@ -133,45 +166,127 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span>ALL CLEAR</span>
             </button>
 
-            {/* DOWNLOAD PDF */}
-            <button
-              onClick={onDownloadPDF}
-              disabled={isDownloadingPDF}
-              className="cursor-pointer inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-extrabold uppercase tracking-wider bg-rose-600 hover:bg-rose-500 active:bg-rose-700 text-white transition-all shadow-sm hover:shadow-rose-600/30 disabled:opacity-60 disabled:cursor-not-allowed"
-              title="Download high-resolution official PDF document"
-            >
-              {isDownloadingPDF ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Generating...</span>
-                </>
-              ) : (
-                <>
-                  <FileText className="w-4 h-4 text-rose-200" />
-                  <span>DOWNLOAD PDF</span>
-                </>
-              )}
-            </button>
+            {/* DOWNLOAD PDF with Dropdown */}
+            <div className="relative">
+              <div className="inline-flex rounded-lg shadow-sm">
+                <button
+                  onClick={onDownloadPDF}
+                  disabled={isDownloadingPDF}
+                  className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-2 rounded-l-lg text-xs font-extrabold uppercase tracking-wider bg-rose-600 hover:bg-rose-500 active:bg-rose-700 text-white transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                  title="Download PDF"
+                >
+                  {isDownloadingPDF ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>Generating...</span>
+                    </>
+                  ) : (
+                    <>
+                      <FileText className="w-3.5 h-3.5 text-rose-200" />
+                      <span>DOWNLOAD PDF</span>
+                    </>
+                  )}
+                </button>
+                <button
+                  onClick={() => setIsPdfMenuOpen(!isPdfMenuOpen)}
+                  disabled={isDownloadingPDF}
+                  className="cursor-pointer px-2 py-2 bg-rose-700 hover:bg-rose-800 text-white rounded-r-lg border-l border-rose-500/50 transition-colors"
+                  title="PDF Download Options (আলাদা ও একসাথে)"
+                >
+                  <ChevronDown className="w-3.5 h-3.5" />
+                </button>
+              </div>
 
-            {/* DOWNLOAD IMAGE */}
-            <button
-              onClick={onDownloadImage}
-              disabled={isDownloadingImage}
-              className="cursor-pointer inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-extrabold uppercase tracking-wider bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white transition-all shadow-sm hover:shadow-emerald-600/30 disabled:opacity-60 disabled:cursor-not-allowed"
-              title="Download high-resolution PNG image"
-            >
-              {isDownloadingImage ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Capturing...</span>
-                </>
-              ) : (
-                <>
-                  <ImageIcon className="w-4 h-4 text-emerald-200" />
-                  <span>DOWNLOAD IMAGE</span>
-                </>
+              {isPdfMenuOpen && (
+                <div className="absolute right-0 top-full mt-1.5 w-60 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-2 z-50 text-white space-y-1 text-xs animate-in fade-in zoom-in-95 duration-100">
+                  <div className="text-[10px] uppercase font-bold text-slate-400 px-2 py-1 border-b border-slate-800">
+                    PDF ডাউনলোড অপশন
+                  </div>
+                  <button
+                    onClick={() => handleSalaryExport('all', 'pdf')}
+                    className="w-full text-left px-2.5 py-2 rounded-lg hover:bg-slate-800 font-bold flex items-center gap-2 text-white"
+                  >
+                    <Users className="w-3.5 h-3.5 text-purple-400" />
+                    <span>🌐 উভয় একসাথে (সম্পূর্ণ শিট)</span>
+                  </button>
+                  <button
+                    onClick={() => handleSalaryExport('leaders', 'pdf')}
+                    className="w-full text-left px-2.5 py-2 rounded-lg hover:bg-slate-800 font-bold flex items-center gap-2 text-blue-300"
+                  >
+                    <Crown className="w-3.5 h-3.5 text-amber-300" />
+                    <span>👑 শুধু টিম লিডার শিট</span>
+                  </button>
+                  <button
+                    onClick={() => handleSalaryExport('trainers', 'pdf')}
+                    className="w-full text-left px-2.5 py-2 rounded-lg hover:bg-slate-800 font-bold flex items-center gap-2 text-emerald-300"
+                  >
+                    <Award className="w-3.5 h-3.5 text-emerald-300" />
+                    <span>⚡ শুধু টিম ট্রেইনার শিট</span>
+                  </button>
+                </div>
               )}
-            </button>
+            </div>
+
+            {/* DOWNLOAD IMAGE with Dropdown */}
+            <div className="relative">
+              <div className="inline-flex rounded-lg shadow-sm">
+                <button
+                  onClick={onDownloadImage}
+                  disabled={isDownloadingImage}
+                  className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-2 rounded-l-lg text-xs font-extrabold uppercase tracking-wider bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                  title="Download Image"
+                >
+                  {isDownloadingImage ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>Capturing...</span>
+                    </>
+                  ) : (
+                    <>
+                      <ImageIcon className="w-3.5 h-3.5 text-emerald-200" />
+                      <span>DOWNLOAD IMAGE</span>
+                    </>
+                  )}
+                </button>
+                <button
+                  onClick={() => setIsImageMenuOpen(!isImageMenuOpen)}
+                  disabled={isDownloadingImage}
+                  className="cursor-pointer px-2 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-r-lg border-l border-emerald-500/50 transition-colors"
+                  title="Image Download Options (আলাদা ও একসাথে)"
+                >
+                  <ChevronDown className="w-3.5 h-3.5" />
+                </button>
+              </div>
+
+              {isImageMenuOpen && (
+                <div className="absolute right-0 top-full mt-1.5 w-60 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-2 z-50 text-white space-y-1 text-xs animate-in fade-in zoom-in-95 duration-100">
+                  <div className="text-[10px] uppercase font-bold text-slate-400 px-2 py-1 border-b border-slate-800">
+                    ইমেজ (PNG) ডাউনলোড অপশন
+                  </div>
+                  <button
+                    onClick={() => handleSalaryExport('all', 'image')}
+                    className="w-full text-left px-2.5 py-2 rounded-lg hover:bg-slate-800 font-bold flex items-center gap-2 text-white"
+                  >
+                    <Users className="w-3.5 h-3.5 text-purple-400" />
+                    <span>🌐 উভয় একসাথে (সম্পূর্ণ শিট)</span>
+                  </button>
+                  <button
+                    onClick={() => handleSalaryExport('leaders', 'image')}
+                    className="w-full text-left px-2.5 py-2 rounded-lg hover:bg-slate-800 font-bold flex items-center gap-2 text-blue-300"
+                  >
+                    <Crown className="w-3.5 h-3.5 text-amber-300" />
+                    <span>👑 শুধু টিম লিডার শিট</span>
+                  </button>
+                  <button
+                    onClick={() => handleSalaryExport('trainers', 'image')}
+                    className="w-full text-left px-2.5 py-2 rounded-lg hover:bg-slate-800 font-bold flex items-center gap-2 text-emerald-300"
+                  >
+                    <Award className="w-3.5 h-3.5 text-emerald-300" />
+                    <span>⚡ শুধু টিম ট্রেইনার শিট</span>
+                  </button>
+                </div>
+              )}
+            </div>
 
             {/* PRINT */}
             <button

@@ -118,18 +118,14 @@ const RankingCardPoster: React.FC<{
       ? 'TEAM LEADER & TEAM TRAINER RANKING'
       : 'OFFICIAL PERFORMANCE RANKING');
 
-  // Automatic multi-column split to fit ALL data inside the strict 9:16 frame without overflowing
-  const isMultiCol = items.length > 18;
-  const halfCount = Math.ceil(items.length / 2);
-  const col1 = isMultiCol ? items.slice(0, halfCount) : items;
-  const col2 = isMultiCol ? items.slice(halfCount) : [];
-  const rowsInCol = isMultiCol ? halfCount : items.length;
+  // Single layer layout with adaptive row density to fill vertical 9:16 space cleanly
+  const count = items.length;
+  const isCompact = count > 10;
+  const isVeryCompact = count > 20;
+  const isUltraCompact = count > 32;
 
-  // Determine row density based on rows count in column
-  const isCompact = rowsInCol > 10;
-  const isUltraCompact = rowsInCol > 20;
 
-  const renderRow = (item: RankingMemberItem, rankNumber: number, isMultiColumn: boolean) => {
+  const renderRow = (item: RankingMemberItem, rankNumber: number) => {
     const isTop1 = rankNumber === 1;
     const isTop2 = rankNumber === 2;
     const isTop3 = rankNumber === 3;
@@ -140,10 +136,12 @@ const RankingCardPoster: React.FC<{
         key={`item-${item.id}-${rankNumber}`}
         className={`grid grid-cols-12 items-center transition-colors ${
           isUltraCompact
-            ? 'px-1.5 py-0.5 text-[8.5px]'
+            ? 'px-2 py-0.5 text-[8px]'
+            : isVeryCompact
+            ? 'px-2.5 py-1 text-[9.5px]'
             : isCompact
-            ? 'px-2 py-1 text-[10px]'
-            : 'px-3 py-1.5 text-xs'
+            ? 'px-3 py-1.5 text-[11px]'
+            : 'px-4 py-2 text-xs'
         }`}
         style={{
           backgroundColor: isTop1
@@ -171,7 +169,7 @@ const RankingCardPoster: React.FC<{
               style={{
                 backgroundColor: '#f59e0b',
                 color: '#ffffff',
-                fontSize: isUltraCompact ? '7.5px' : isCompact ? '8.5px' : '10.5px',
+                fontSize: isUltraCompact ? '7px' : isVeryCompact ? '8px' : isCompact ? '9px' : '11px',
                 padding: isUltraCompact ? '1px 3px' : '1.5px 5px',
               }}
             >
@@ -183,7 +181,7 @@ const RankingCardPoster: React.FC<{
               style={{
                 backgroundColor: '#94a3b8',
                 color: '#ffffff',
-                fontSize: isUltraCompact ? '7.5px' : isCompact ? '8.5px' : '10.5px',
+                fontSize: isUltraCompact ? '7px' : isVeryCompact ? '8px' : isCompact ? '9px' : '11px',
                 padding: isUltraCompact ? '1px 3px' : '1.5px 5px',
               }}
             >
@@ -195,7 +193,7 @@ const RankingCardPoster: React.FC<{
               style={{
                 backgroundColor: '#d97706',
                 color: '#ffffff',
-                fontSize: isUltraCompact ? '7.5px' : isCompact ? '8.5px' : '10.5px',
+                fontSize: isUltraCompact ? '7px' : isVeryCompact ? '8px' : isCompact ? '9px' : '11px',
                 padding: isUltraCompact ? '1px 3px' : '1.5px 5px',
               }}
             >
@@ -208,9 +206,9 @@ const RankingCardPoster: React.FC<{
                 backgroundColor: '#f1f5f9',
                 color: '#475569',
                 border: '1px solid #e2e8f0',
-                fontSize: isUltraCompact ? '7.5px' : isCompact ? '8.5px' : '10px',
-                minWidth: isUltraCompact ? '14px' : '17px',
-                height: isUltraCompact ? '14px' : '17px',
+                fontSize: isUltraCompact ? '7px' : isVeryCompact ? '8px' : isCompact ? '9px' : '10.5px',
+                minWidth: isUltraCompact ? '14px' : '18px',
+                height: isUltraCompact ? '14px' : '18px',
               }}
             >
               {rankNumber}
@@ -227,11 +225,11 @@ const RankingCardPoster: React.FC<{
               }`}
               style={{
                 fontSize: isUltraCompact
-                  ? '8.5px'
+                  ? '8px'
+                  : isVeryCompact
+                  ? '9px'
                   : isCompact
-                  ? '9.5px'
-                  : isMultiColumn
-                  ? '10.5px'
+                  ? '10px'
                   : '12px',
               }}
               title={item.name}
@@ -245,21 +243,21 @@ const RankingCardPoster: React.FC<{
                   backgroundColor: item.role === 'leader' ? '#dbeafe' : '#dcfce7',
                   color: item.role === 'leader' ? '#1e40af' : '#166534',
                   border: `0.5px solid ${item.role === 'leader' ? '#bfdbfe' : '#bbf7d0'}`,
-                  fontSize: '7px',
+                  fontSize: '6.5px',
                 }}
               >
                 {item.role === 'leader' ? 'TL' : 'TT'}
               </span>
             )}
           </div>
-          {!isCompact && !isMultiColumn && item.emailOrPhone && (
+          {!isCompact && item.emailOrPhone && (
             <div className="text-[9px] text-[#64748b] truncate mt-0.5">
               {item.emailOrPhone}
             </div>
           )}
         </div>
 
-        {/* Convert Count Badge (NO BALANCE) */}
+        {/* Convert Count Badge */}
         <div className="col-span-3 text-right flex items-center justify-end">
           <span
             className="inline-flex items-center gap-0.5 rounded-full font-black shadow-2xs"
@@ -281,14 +279,12 @@ const RankingCardPoster: React.FC<{
               border: `1px solid ${
                 isTop1 ? '#fde68a' : isTop2 ? '#cbd5e1' : isTop3 ? '#fed7aa' : '#e2e8f0'
               }`,
-              fontSize: isUltraCompact ? '8px' : isCompact ? '9px' : '10.5px',
+              fontSize: isUltraCompact ? '7.5px' : isVeryCompact ? '8.5px' : isCompact ? '9.5px' : '11px',
               padding: isUltraCompact ? '1px 3px' : '1.5px 5px',
             }}
           >
             <span>{item.convert}</span>
-            <span style={{ fontSize: '6.5px', opacity: 0.85 }}>
-              {isMultiColumn ? 'C' : 'CONV'}
-            </span>
+            <span style={{ fontSize: '6.5px', opacity: 0.85 }}>CONV</span>
           </span>
         </div>
       </div>
@@ -417,41 +413,8 @@ const RankingCardPoster: React.FC<{
           >
             No active convert data found for this evaluation period.
           </div>
-        ) : isMultiCol ? (
-          /* Two Column Layout for High Member Count (Fits 20 to 60+ entries neatly) */
-          <div className="grid grid-cols-2 gap-2 flex-1 min-h-0 overflow-hidden">
-            {/* Column 1 */}
-            <div className="rounded-lg overflow-hidden border border-[#cbd5e1] flex flex-col min-h-0 bg-white shadow-2xs">
-              <div
-                className="grid grid-cols-12 px-2 py-1.5 text-[9px] sm:text-[10px] font-black tracking-wider uppercase items-center shrink-0"
-                style={{ backgroundColor: '#0f172a', color: '#ffffff' }}
-              >
-                <div className="col-span-2 text-center">RK</div>
-                <div className="col-span-7 text-left">NAME</div>
-                <div className="col-span-3 text-right">CONV</div>
-              </div>
-              <div className="flex-1 min-h-0 overflow-hidden flex flex-col justify-start">
-                {col1.map((item, idx) => renderRow(item, idx + 1, true))}
-              </div>
-            </div>
-
-            {/* Column 2 */}
-            <div className="rounded-lg overflow-hidden border border-[#cbd5e1] flex flex-col min-h-0 bg-white shadow-2xs">
-              <div
-                className="grid grid-cols-12 px-2 py-1.5 text-[9px] sm:text-[10px] font-black tracking-wider uppercase items-center shrink-0"
-                style={{ backgroundColor: '#0f172a', color: '#ffffff' }}
-              >
-                <div className="col-span-2 text-center">RK</div>
-                <div className="col-span-7 text-left">NAME</div>
-                <div className="col-span-3 text-right">CONV</div>
-              </div>
-              <div className="flex-1 min-h-0 overflow-hidden flex flex-col justify-start">
-                {col2.map((item, idx) => renderRow(item, col1.length + idx + 1, true))}
-              </div>
-            </div>
-          </div>
         ) : (
-          /* Single Column Standard Layout */
+          /* Single Column Single-Layer Standard Layout */
           <div className="rounded-xl overflow-hidden border border-[#cbd5e1] flex flex-col min-h-0 bg-white shadow-xs flex-1">
             <div
               className="grid grid-cols-12 px-3 sm:px-4 py-2 text-[10.5px] sm:text-[11px] font-black tracking-wider uppercase items-center shrink-0"
@@ -462,7 +425,7 @@ const RankingCardPoster: React.FC<{
               <div className="col-span-3 text-right">CONVERT</div>
             </div>
             <div className="flex-1 min-h-0 overflow-hidden flex flex-col justify-start">
-              {items.map((item, idx) => renderRow(item, idx + 1, false))}
+              {items.map((item, idx) => renderRow(item, idx + 1))}
             </div>
           </div>
         )}

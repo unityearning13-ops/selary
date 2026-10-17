@@ -118,29 +118,208 @@ const RankingCardPoster: React.FC<{
       ? 'TEAM LEADER & TEAM TRAINER RANKING'
       : 'OFFICIAL PERFORMANCE RANKING');
 
+  // Automatic multi-column split to fit ALL data inside the strict 9:16 frame without overflowing
+  const isMultiCol = items.length > 18;
+  const halfCount = Math.ceil(items.length / 2);
+  const col1 = isMultiCol ? items.slice(0, halfCount) : items;
+  const col2 = isMultiCol ? items.slice(halfCount) : [];
+  const rowsInCol = isMultiCol ? halfCount : items.length;
+
+  // Determine row density based on rows count in column
+  const isCompact = rowsInCol > 10;
+  const isUltraCompact = rowsInCol > 20;
+
+  const renderRow = (item: RankingMemberItem, rankNumber: number, isMultiColumn: boolean) => {
+    const isTop1 = rankNumber === 1;
+    const isTop2 = rankNumber === 2;
+    const isTop3 = rankNumber === 3;
+    const rowBg = rankNumber % 2 === 0 ? '#f8fafc' : '#ffffff';
+
+    return (
+      <div
+        key={`item-${item.id}-${rankNumber}`}
+        className={`grid grid-cols-12 items-center transition-colors ${
+          isUltraCompact
+            ? 'px-1.5 py-0.5 text-[8.5px]'
+            : isCompact
+            ? 'px-2 py-1 text-[10px]'
+            : 'px-3 py-1.5 text-xs'
+        }`}
+        style={{
+          backgroundColor: isTop1
+            ? '#fffdf0'
+            : isTop2
+            ? '#f8fafc'
+            : isTop3
+            ? '#fffaf5'
+            : rowBg,
+          borderBottom: '1px solid #f1f5f9',
+          borderLeft: isTop1
+            ? '3px solid #f59e0b'
+            : isTop2
+            ? '3px solid #94a3b8'
+            : isTop3
+            ? '3px solid #d97706'
+            : '3px solid transparent',
+        }}
+      >
+        {/* Rank Badge */}
+        <div className="col-span-2 flex items-center justify-center">
+          {isTop1 ? (
+            <span
+              className="inline-flex items-center justify-center font-black rounded-full shadow-2xs"
+              style={{
+                backgroundColor: '#f59e0b',
+                color: '#ffffff',
+                fontSize: isUltraCompact ? '7.5px' : isCompact ? '8.5px' : '10.5px',
+                padding: isUltraCompact ? '1px 3px' : '1.5px 5px',
+              }}
+            >
+              🥇1
+            </span>
+          ) : isTop2 ? (
+            <span
+              className="inline-flex items-center justify-center font-black rounded-full shadow-2xs"
+              style={{
+                backgroundColor: '#94a3b8',
+                color: '#ffffff',
+                fontSize: isUltraCompact ? '7.5px' : isCompact ? '8.5px' : '10.5px',
+                padding: isUltraCompact ? '1px 3px' : '1.5px 5px',
+              }}
+            >
+              🥈2
+            </span>
+          ) : isTop3 ? (
+            <span
+              className="inline-flex items-center justify-center font-black rounded-full shadow-2xs"
+              style={{
+                backgroundColor: '#d97706',
+                color: '#ffffff',
+                fontSize: isUltraCompact ? '7.5px' : isCompact ? '8.5px' : '10.5px',
+                padding: isUltraCompact ? '1px 3px' : '1.5px 5px',
+              }}
+            >
+              🥉3
+            </span>
+          ) : (
+            <span
+              className="inline-flex items-center justify-center font-bold rounded-full"
+              style={{
+                backgroundColor: '#f1f5f9',
+                color: '#475569',
+                border: '1px solid #e2e8f0',
+                fontSize: isUltraCompact ? '7.5px' : isCompact ? '8.5px' : '10px',
+                minWidth: isUltraCompact ? '14px' : '17px',
+                height: isUltraCompact ? '14px' : '17px',
+              }}
+            >
+              {rankNumber}
+            </span>
+          )}
+        </div>
+
+        {/* Name & Role Designation */}
+        <div className="col-span-7 pr-1 truncate">
+          <div className="flex items-center gap-1 truncate">
+            <span
+              className={`font-bold uppercase truncate ${
+                isTop1 ? 'text-[#0f172a] font-black' : 'text-[#1e293b]'
+              }`}
+              style={{
+                fontSize: isUltraCompact
+                  ? '8.5px'
+                  : isCompact
+                  ? '9.5px'
+                  : isMultiColumn
+                  ? '10.5px'
+                  : '12px',
+              }}
+              title={item.name}
+            >
+              {item.name}
+            </span>
+            {showRoleBadge && (
+              <span
+                className="px-1 py-0.2 rounded-xs font-black uppercase shrink-0"
+                style={{
+                  backgroundColor: item.role === 'leader' ? '#dbeafe' : '#dcfce7',
+                  color: item.role === 'leader' ? '#1e40af' : '#166534',
+                  border: `0.5px solid ${item.role === 'leader' ? '#bfdbfe' : '#bbf7d0'}`,
+                  fontSize: '7px',
+                }}
+              >
+                {item.role === 'leader' ? 'TL' : 'TT'}
+              </span>
+            )}
+          </div>
+          {!isCompact && !isMultiColumn && item.emailOrPhone && (
+            <div className="text-[9px] text-[#64748b] truncate mt-0.5">
+              {item.emailOrPhone}
+            </div>
+          )}
+        </div>
+
+        {/* Convert Count Badge (NO BALANCE) */}
+        <div className="col-span-3 text-right flex items-center justify-end">
+          <span
+            className="inline-flex items-center gap-0.5 rounded-full font-black shadow-2xs"
+            style={{
+              backgroundColor: isTop1
+                ? '#fef3c7'
+                : isTop2
+                ? '#f1f5f9'
+                : isTop3
+                ? '#ffedd5'
+                : '#f8fafc',
+              color: isTop1
+                ? '#92400e'
+                : isTop2
+                ? '#1e293b'
+                : isTop3
+                ? '#9a3412'
+                : '#0f172a',
+              border: `1px solid ${
+                isTop1 ? '#fde68a' : isTop2 ? '#cbd5e1' : isTop3 ? '#fed7aa' : '#e2e8f0'
+              }`,
+              fontSize: isUltraCompact ? '8px' : isCompact ? '9px' : '10.5px',
+              padding: isUltraCompact ? '1px 3px' : '1.5px 5px',
+            }}
+          >
+            <span>{item.convert}</span>
+            <span style={{ fontSize: '6.5px', opacity: 0.85 }}>
+              {isMultiColumn ? 'C' : 'CONV'}
+            </span>
+          </span>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div
       id={id}
-      className={`${frameClasses} transition-all duration-300 relative overflow-hidden`}
+      className={`${frameClasses} transition-all duration-300 relative flex flex-col justify-between overflow-hidden`}
       style={{
         backgroundColor: '#ffffff',
         border: '2px solid #e2e8f0',
         fontFamily:
           'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+        aspectRatio: '9 / 16',
+        boxSizing: 'border-box',
         ...frameStyle,
       }}
     >
-      {/* Top Elegant Gold & Navy Accent Stripe */}
+      {/* Top Accent Stripe */}
       <div
-        className="h-2 w-full"
+        className="h-2 w-full shrink-0"
         style={{
           background: 'linear-gradient(90deg, #0f172a 0%, #1e3a8a 30%, #f59e0b 60%, #10b981 100%)',
         }}
       />
 
-      {/* Poster Header (100% English, Corporate Executive Design) */}
+      {/* Poster Header (100% English, Compact & Elegant) */}
       <div
-        className="px-6 py-5 text-center relative"
+        className="px-5 py-3 sm:py-3.5 text-center relative shrink-0"
         style={{
           backgroundColor: '#0f172a',
           color: '#ffffff',
@@ -149,20 +328,20 @@ const RankingCardPoster: React.FC<{
       >
         {/* Golden Glow Corporate Badge */}
         <div
-          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest mb-2 shadow-xs"
+          className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest mb-1.5 shadow-xs"
           style={{
             backgroundColor: '#fffbeb',
             color: '#b45309',
             border: '1px solid #fde68a',
           }}
         >
-          <Trophy className="w-3.5 h-3.5 text-[#d97706] fill-current" />
+          <Trophy className="w-3 h-3 text-[#d97706] fill-current" />
           <span>OFFICIAL PERFORMANCE LEADERBOARD</span>
         </div>
 
         {/* Platform Name */}
         <h1
-          className="text-lg sm:text-2xl font-black tracking-wider uppercase text-white"
+          className="text-base sm:text-xl font-black tracking-wider uppercase text-white leading-tight"
           style={{ color: '#ffffff', letterSpacing: '0.04em' }}
         >
           UNITY EARNING & LEARNING PLATFORM
@@ -170,7 +349,7 @@ const RankingCardPoster: React.FC<{
 
         {/* Dynamic Ranking Title */}
         <h2
-          className="text-sm sm:text-lg font-black mt-1 uppercase tracking-wide"
+          className="text-xs sm:text-base font-black mt-0.5 uppercase tracking-wide leading-tight"
           style={{ color: '#fbbf24' }}
         >
           {resolvedTitle}
@@ -178,7 +357,7 @@ const RankingCardPoster: React.FC<{
 
         {/* Subtitle & Evaluation Period */}
         <div
-          className="text-[11px] font-semibold mt-2 flex items-center justify-center gap-2 flex-wrap uppercase tracking-wider"
+          className="text-[9.5px] sm:text-[10px] font-semibold mt-1 flex items-center justify-center gap-1.5 flex-wrap uppercase tracking-wider leading-tight"
           style={{ color: '#94a3b8' }}
         >
           <span>{subTitle || 'Performance Evaluation'}</span>
@@ -187,257 +366,143 @@ const RankingCardPoster: React.FC<{
         </div>
       </div>
 
-      {/* Metric Summary Ribbon */}
+      {/* Metric Summary Ribbon (Shrink-0) */}
       <div
-        className="px-4 py-2.5 flex items-center justify-around text-center text-xs border-b shadow-2xs"
+        className="px-4 py-1.5 sm:py-2 flex items-center justify-around text-center text-xs border-b shadow-2xs shrink-0"
         style={{
           backgroundColor: '#f8fafc',
           borderColor: '#e2e8f0',
         }}
       >
         <div className="flex flex-col items-center">
-          <span className="text-[10px] font-extrabold uppercase tracking-wider" style={{ color: '#64748b' }}>
-            TOTAL PARTICIPANTS
+          <span className="text-[9px] font-extrabold uppercase tracking-wider" style={{ color: '#64748b' }}>
+            PARTICIPANTS
           </span>
-          <span className="text-sm font-black" style={{ color: '#0f172a' }}>
+          <span className="text-xs sm:text-sm font-black" style={{ color: '#0f172a' }}>
             {items.length}
           </span>
         </div>
-        <div className="h-6 w-px" style={{ backgroundColor: '#cbd5e1' }} />
+        <div className="h-5 w-px" style={{ backgroundColor: '#cbd5e1' }} />
         <div className="flex flex-col items-center">
-          <span className="text-[10px] font-extrabold uppercase tracking-wider" style={{ color: '#64748b' }}>
+          <span className="text-[9px] font-extrabold uppercase tracking-wider" style={{ color: '#64748b' }}>
             TOTAL CONVERTS
           </span>
-          <span className="text-sm font-black" style={{ color: '#2563eb' }}>
+          <span className="text-xs sm:text-sm font-black" style={{ color: '#2563eb' }}>
             {totalConverts}
           </span>
         </div>
-        <div className="h-6 w-px" style={{ backgroundColor: '#cbd5e1' }} />
+        <div className="h-5 w-px" style={{ backgroundColor: '#cbd5e1' }} />
         <div className="flex flex-col items-center">
-          <span className="text-[10px] font-extrabold uppercase tracking-wider" style={{ color: '#64748b' }}>
-            HIGHEST CONVERT
+          <span className="text-[9px] font-extrabold uppercase tracking-wider" style={{ color: '#64748b' }}>
+            TOP SCORE
           </span>
-          <span className="text-sm font-black" style={{ color: '#d97706' }}>
+          <span className="text-xs sm:text-sm font-black" style={{ color: '#d97706' }}>
             {highestConvert}
           </span>
         </div>
       </div>
 
-      {/* Ranking List Table (CONVERT ONLY, ZERO BALANCE, 100% ENGLISH) */}
-      <div className="p-4 sm:p-5">
-        <div
-          className="rounded-xl overflow-hidden shadow-xs"
-          style={{
-            border: '1.5px solid #cbd5e1',
-            backgroundColor: '#ffffff',
-          }}
-        >
-          {/* Table Header: Pure English */}
+      {/* =========================================================================
+          RANKING LIST TABLE CONTAINER (FLEX-1, OVERFLOW-HIDDEN, EXACT 9:16 ENFORCED)
+          Fits all data with single-column or auto-switched 2-column layout
+         ========================================================================= */}
+      <div
+        className="px-3 sm:px-4 py-2 flex flex-col justify-start overflow-hidden"
+        style={{ flex: '1 1 0%', minHeight: 0 }}
+      >
+        {items.length === 0 ? (
           <div
-            className="grid grid-cols-12 px-4 py-3 text-[11px] font-black tracking-wider uppercase items-center"
-            style={{
-              backgroundColor: '#0f172a',
-              color: '#ffffff',
-            }}
+            className="p-8 text-center text-xs font-bold uppercase tracking-wider my-auto"
+            style={{ color: '#64748b' }}
           >
-            <div className="col-span-2 text-center">RANK</div>
-            <div className="col-span-7 text-left">NAME & DESIGNATION</div>
-            <div className="col-span-3 text-right">CONVERT</div>
+            No active convert data found for this evaluation period.
           </div>
-
-          {/* Table Rows */}
-          {items.length === 0 ? (
-            <div
-              className="p-10 text-center text-xs font-bold uppercase tracking-wider"
-              style={{ color: '#64748b' }}
-            >
-              No active convert data found for this evaluation period.
+        ) : isMultiCol ? (
+          /* Two Column Layout for High Member Count (Fits 20 to 60+ entries neatly) */
+          <div className="grid grid-cols-2 gap-2 flex-1 min-h-0 overflow-hidden">
+            {/* Column 1 */}
+            <div className="rounded-lg overflow-hidden border border-[#cbd5e1] flex flex-col min-h-0 bg-white shadow-2xs">
+              <div
+                className="grid grid-cols-12 px-2 py-1.5 text-[9px] sm:text-[10px] font-black tracking-wider uppercase items-center shrink-0"
+                style={{ backgroundColor: '#0f172a', color: '#ffffff' }}
+              >
+                <div className="col-span-2 text-center">RK</div>
+                <div className="col-span-7 text-left">NAME</div>
+                <div className="col-span-3 text-right">CONV</div>
+              </div>
+              <div className="flex-1 min-h-0 overflow-hidden flex flex-col justify-start">
+                {col1.map((item, idx) => renderRow(item, idx + 1, true))}
+              </div>
             </div>
-          ) : (
-            items.map((item, index) => {
-              const rankNumber = index + 1;
-              const isTop1 = rankNumber === 1;
-              const isTop2 = rankNumber === 2;
-              const isTop3 = rankNumber === 3;
-              const rowBg = index % 2 === 0 ? '#ffffff' : '#f8fafc';
 
-              return (
-                <div
-                  key={`item-${item.id}-${index}`}
-                  className="grid grid-cols-12 px-4 py-2.5 items-center text-xs transition-colors"
-                  style={{
-                    backgroundColor: isTop1
-                      ? '#fffdf0'
-                      : isTop2
-                      ? '#f8fafc'
-                      : isTop3
-                      ? '#fffaf5'
-                      : rowBg,
-                    borderBottom: '1px solid #f1f5f9',
-                    borderLeft: isTop1
-                      ? '4px solid #f59e0b'
-                      : isTop2
-                      ? '4px solid #94a3b8'
-                      : isTop3
-                      ? '4px solid #d97706'
-                      : '4px solid transparent',
-                  }}
-                >
-                  {/* Rank Badge */}
-                  <div className="col-span-2 flex items-center justify-center">
-                    {isTop1 ? (
-                      <span
-                        className="inline-flex items-center justify-center gap-0.5 px-2.5 py-0.5 rounded-full text-xs font-black shadow-xs"
-                        style={{
-                          backgroundColor: '#f59e0b',
-                          color: '#ffffff',
-                        }}
-                      >
-                        🥇 1
-                      </span>
-                    ) : isTop2 ? (
-                      <span
-                        className="inline-flex items-center justify-center gap-0.5 px-2.5 py-0.5 rounded-full text-xs font-black shadow-xs"
-                        style={{
-                          backgroundColor: '#94a3b8',
-                          color: '#ffffff',
-                        }}
-                      >
-                        🥈 2
-                      </span>
-                    ) : isTop3 ? (
-                      <span
-                        className="inline-flex items-center justify-center gap-0.5 px-2.5 py-0.5 rounded-full text-xs font-black shadow-xs"
-                        style={{
-                          backgroundColor: '#d97706',
-                          color: '#ffffff',
-                        }}
-                      >
-                        🥉 3
-                      </span>
-                    ) : (
-                      <span
-                        className="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold"
-                        style={{
-                          backgroundColor: '#f1f5f9',
-                          color: '#475569',
-                          border: '1px solid #e2e8f0',
-                        }}
-                      >
-                        {rankNumber}
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Name & Designation */}
-                  <div className="col-span-7 pr-2">
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <span
-                        className={`text-xs sm:text-sm font-bold uppercase truncate ${
-                          isTop1 ? 'text-[#0f172a] font-black' : 'text-[#1e293b]'
-                        }`}
-                        style={{ color: '#0f172a' }}
-                      >
-                        {item.name}
-                      </span>
-                      {showRoleBadge && (
-                        <span
-                          className="text-[9px] px-2 py-0.5 rounded-sm font-extrabold uppercase shrink-0"
-                          style={{
-                            backgroundColor: item.role === 'leader' ? '#dbeafe' : '#dcfce7',
-                            color: item.role === 'leader' ? '#1e40af' : '#166534',
-                            border: `1px solid ${
-                              item.role === 'leader' ? '#bfdbfe' : '#bbf7d0'
-                            }`,
-                          }}
-                        >
-                          {item.role === 'leader' ? 'TEAM LEADER' : 'TEAM TRAINER'}
-                        </span>
-                      )}
-                    </div>
-
-                    {item.emailOrPhone && (
-                      <div
-                        className="text-[10px] truncate mt-0.5 font-medium"
-                        style={{ color: '#64748b' }}
-                      >
-                        {item.emailOrPhone}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Convert Count Badge (CONVERT ONLY, NO BALANCE) */}
-                  <div className="col-span-3 text-right flex items-center justify-end">
-                    <span
-                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-black shadow-2xs"
-                      style={{
-                        backgroundColor: isTop1
-                          ? '#fef3c7'
-                          : isTop2
-                          ? '#f1f5f9'
-                          : isTop3
-                          ? '#ffedd5'
-                          : '#f8fafc',
-                        color: isTop1
-                          ? '#92400e'
-                          : isTop2
-                          ? '#1e293b'
-                          : isTop3
-                          ? '#9a3412'
-                          : '#0f172a',
-                        border: `1.5px solid ${
-                          isTop1 ? '#fde68a' : isTop2 ? '#cbd5e1' : isTop3 ? '#fed7aa' : '#e2e8f0'
-                        }`,
-                      }}
-                    >
-                      <span className="text-xs sm:text-sm">{item.convert}</span>
-                      <span className="text-[9px] font-extrabold uppercase opacity-80">
-                        CONVERT
-                      </span>
-                    </span>
-                  </div>
-                </div>
-              );
-            })
-          )}
-        </div>
+            {/* Column 2 */}
+            <div className="rounded-lg overflow-hidden border border-[#cbd5e1] flex flex-col min-h-0 bg-white shadow-2xs">
+              <div
+                className="grid grid-cols-12 px-2 py-1.5 text-[9px] sm:text-[10px] font-black tracking-wider uppercase items-center shrink-0"
+                style={{ backgroundColor: '#0f172a', color: '#ffffff' }}
+              >
+                <div className="col-span-2 text-center">RK</div>
+                <div className="col-span-7 text-left">NAME</div>
+                <div className="col-span-3 text-right">CONV</div>
+              </div>
+              <div className="flex-1 min-h-0 overflow-hidden flex flex-col justify-start">
+                {col2.map((item, idx) => renderRow(item, col1.length + idx + 1, true))}
+              </div>
+            </div>
+          </div>
+        ) : (
+          /* Single Column Standard Layout */
+          <div className="rounded-xl overflow-hidden border border-[#cbd5e1] flex flex-col min-h-0 bg-white shadow-xs flex-1">
+            <div
+              className="grid grid-cols-12 px-3 sm:px-4 py-2 text-[10.5px] sm:text-[11px] font-black tracking-wider uppercase items-center shrink-0"
+              style={{ backgroundColor: '#0f172a', color: '#ffffff' }}
+            >
+              <div className="col-span-2 text-center">RANK</div>
+              <div className="col-span-7 text-left">NAME & DESIGNATION</div>
+              <div className="col-span-3 text-right">CONVERT</div>
+            </div>
+            <div className="flex-1 min-h-0 overflow-hidden flex flex-col justify-start">
+              {items.map((item, idx) => renderRow(item, idx + 1, false))}
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Official Admin Verification & Signature (100% English) */}
+      {/* Official Admin Verification & Signature Footer (Shrink-0) */}
       <div
-        className="p-5 mt-auto"
+        className="px-4 sm:px-5 py-2.5 sm:py-3.5 mt-auto shrink-0"
         style={{
           backgroundColor: '#f8fafc',
           borderTop: '1px solid #e2e8f0',
         }}
       >
-        <div className="flex items-end justify-between gap-4">
-          {/* Left Side: Verification Badge & Stamp */}
-          <div className="space-y-1.5 text-left">
+        <div className="flex items-end justify-between gap-3">
+          {/* Left Side: Verification Badge & Date/Time */}
+          <div className="space-y-1 text-left">
             <div
-              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold shadow-2xs"
+              className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[9.5px] sm:text-[10.5px] font-bold shadow-2xs"
               style={{
                 backgroundColor: '#ecfdf5',
                 color: '#065f46',
                 border: '1px solid #a7f3d0',
               }}
             >
-              <CheckCircle2 className="w-3.5 h-3.5 text-[#059669] shrink-0" />
-              <span>Verified & Approved by Executive Admin</span>
+              <CheckCircle2 className="w-3 h-3 text-[#059669] shrink-0" />
+              <span>Verified & Approved by Admin</span>
             </div>
 
-            <div className="text-[11px] font-medium" style={{ color: '#64748b' }}>
+            <div className="text-[9.5px] sm:text-[10px] font-medium" style={{ color: '#64748b' }}>
               <span>
                 DATE: <strong style={{ color: '#0f172a' }}>{englishDate}</strong>
               </span>
-              <span className="mx-2">•</span>
+              <span className="mx-1.5">•</span>
               <span>
                 TIME: <strong style={{ color: '#0f172a' }}>{englishTime}</strong>
               </span>
             </div>
 
             <div
-              className="text-[9px] font-black uppercase tracking-widest"
+              className="text-[8.5px] sm:text-[9px] font-black uppercase tracking-widest"
               style={{ color: '#94a3b8' }}
             >
               UNITY EARNING & LEARNING PLATFORM
@@ -445,10 +510,10 @@ const RankingCardPoster: React.FC<{
           </div>
 
           {/* Right Side: Admin Signature */}
-          <div className="flex flex-col items-center text-center min-w-[170px]">
-            <div className="h-8 flex items-center justify-center select-none">
+          <div className="flex flex-col items-center text-center min-w-[140px] sm:min-w-[160px]">
+            <div className="h-6 sm:h-7 flex items-center justify-center select-none">
               <svg
-                className="w-36 h-8"
+                className="w-32 sm:w-36 h-6 sm:h-7"
                 viewBox="0 0 220 50"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
@@ -470,18 +535,18 @@ const RankingCardPoster: React.FC<{
             </div>
 
             <div
-              className="w-36 h-px mt-0.5 mb-1"
+              className="w-32 sm:w-36 h-px mt-0.5 mb-1"
               style={{ backgroundColor: '#94a3b8' }}
             />
 
             <div
-              className="text-[11px] font-black tracking-wider uppercase"
+              className="text-[10px] sm:text-[11px] font-black tracking-wider uppercase leading-none"
               style={{ color: '#0f172a' }}
             >
               {adminName || 'JIHADUL ISLAM'}
             </div>
             <div
-              className="text-[10px] font-semibold"
+              className="text-[8.5px] sm:text-[9.5px] font-semibold mt-0.5 leading-none"
               style={{ color: '#475569' }}
             >
               {adminRole || 'Executive Admin & Managing Director'}
@@ -491,13 +556,13 @@ const RankingCardPoster: React.FC<{
 
         {/* Bottom Bar Authenticity Stamp */}
         <div
-          className="mt-4 pt-2 border-t text-center text-[9px] font-black tracking-widest uppercase"
+          className="mt-2 pt-1 border-t text-center text-[8px] font-black tracking-widest uppercase"
           style={{
             borderColor: '#e2e8f0',
             color: '#94a3b8',
           }}
         >
-          OFFICIAL PERFORMANCE DOCUMENT • AUTHENTIC & SECURE RECORD
+          OFFICIAL PERFORMANCE DOCUMENT • 9:16 MOBILE LEADERBOARD • AUTHENTIC RECORD
         </div>
       </div>
     </div>
@@ -523,6 +588,7 @@ export const RankingSection: React.FC<RankingSectionProps> = ({
   // 4. Modals & Raw Import Drawer state
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<RankingMemberItem | null>(null);
+  const [itemToDelete, setItemToDelete] = useState<{ id: string; role: 'leader' | 'trainer'; name: string } | null>(null);
   const [isRawPasteOpen, setIsRawPasteOpen] = useState(false);
   const [rawPasteText, setRawPasteText] = useState('');
   const [rawPasteRole, setRawPasteRole] = useState<'leader' | 'trainer'>('leader');
@@ -624,18 +690,19 @@ export const RankingSection: React.FC<RankingSectionProps> = ({
     const name = (formData.get('name') as string)?.trim() || 'New Member';
     const emailOrPhone = (formData.get('emailOrPhone') as string)?.trim() || '';
     const balance = Number(formData.get('balance')) || 0;
-    let convert = Number(formData.get('convert'));
+    const convertVal = formData.get('convert');
+    let convert = convertVal !== null && convertVal !== '' ? Number(convertVal) : 0;
+    if (isNaN(convert) || convert < 0) {
+      convert = 0;
+    }
 
     const role = (formData.get('role') as 'leader' | 'trainer') || (activeTab === 'trainer' ? 'trainer' : 'leader');
 
-    // Auto-calculate convert if left empty or 0
-    if (!convert && balance > 0) {
-      convert = Math.round(balance / (role === 'leader' ? 60 : 50));
-    }
-
-    if (convert <= 0) {
-      alert('র‍্যাঙ্কিংয়ে যুক্ত করতে কনভার্ট সংখ্যা শূন্যের বেশি ( > 0 ) হতে হবে!');
-      return;
+    // Auto-calculate convert if left empty/zero and balance > 0
+    if (convertVal === null || convertVal === '') {
+      if (balance > 0) {
+        convert = Math.round(balance / (role === 'leader' ? 60 : 50));
+      }
     }
 
     const newItem: RankingMemberItem = {
@@ -649,15 +716,13 @@ export const RankingSection: React.FC<RankingSectionProps> = ({
     };
 
     if (role === 'leader') {
-      const updated = [...effectiveLeaders, newItem]
-        .filter((i) => i.convert > 0)
-        .sort((a, b) => b.convert - a.convert);
+      const base = customLeaders !== null ? customLeaders : effectiveLeaders;
+      const updated = [...base, newItem].sort((a, b) => b.convert - a.convert);
       setCustomLeaders(updated);
       showToast(`টিম লিডার "${name}" (${convert} কনভার্ট) যুক্ত হয়েছে!`);
     } else {
-      const updated = [...effectiveTrainers, newItem]
-        .filter((i) => i.convert > 0)
-        .sort((a, b) => b.convert - a.convert);
+      const base = customTrainers !== null ? customTrainers : effectiveTrainers;
+      const updated = [...base, newItem].sort((a, b) => b.convert - a.convert);
       setCustomTrainers(updated);
       showToast(`টিম ট্রেইনার "${name}" (${convert} কনভার্ট) যুক্ত হয়েছে!`);
     }
@@ -665,7 +730,7 @@ export const RankingSection: React.FC<RankingSectionProps> = ({
     setIsAddModalOpen(false);
   };
 
-  // Update existing item
+  // Update existing item (allows zero '0' convert and saves with 0 if desired)
   const handleUpdateItem = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!editingItem) return;
@@ -673,17 +738,12 @@ export const RankingSection: React.FC<RankingSectionProps> = ({
     const formData = new FormData(e.currentTarget);
     const name = (formData.get('name') as string)?.trim() || editingItem.name;
     const emailOrPhone = (formData.get('emailOrPhone') as string)?.trim() || '';
-    let convert = Number(formData.get('convert'));
+    const convertVal = formData.get('convert');
+    let convert = convertVal !== null && convertVal !== '' ? Number(convertVal) : 0;
+    if (isNaN(convert) || convert < 0) {
+      convert = 0;
+    }
     const balance = Number(formData.get('balance')) || 0;
-
-    if (!convert && balance > 0) {
-      convert = Math.round(balance / (editingItem.role === 'leader' ? 60 : 50));
-    }
-
-    if (convert <= 0) {
-      alert('কনভার্ট সংখ্যা শূন্যের বেশি ( > 0 ) হতে হবে। শূন্য কনভার্টের সদস্য র‍্যাঙ্কিংয়ে রাখা যাবে না।');
-      return;
-    }
 
     const updatedItem: RankingMemberItem = {
       ...editingItem,
@@ -694,31 +754,33 @@ export const RankingSection: React.FC<RankingSectionProps> = ({
     };
 
     if (editingItem.role === 'leader') {
-      const list = effectiveLeaders.map((i) => (i.id === editingItem.id ? updatedItem : i));
+      const base = customLeaders !== null ? customLeaders : effectiveLeaders;
+      const list = base.map((i) => (i.id === editingItem.id ? updatedItem : i));
       const sorted = list.sort((a, b) => b.convert - a.convert);
       setCustomLeaders(sorted);
     } else {
-      const list = effectiveTrainers.map((i) => (i.id === editingItem.id ? updatedItem : i));
+      const base = customTrainers !== null ? customTrainers : effectiveTrainers;
+      const list = base.map((i) => (i.id === editingItem.id ? updatedItem : i));
       const sorted = list.sort((a, b) => b.convert - a.convert);
       setCustomTrainers(sorted);
     }
 
     setEditingItem(null);
-    showToast(`"${name}" এর র‍্যাঙ্কিং কনভার্ট (${convert}) আপডেট হয়েছে!`);
+    showToast(`"${name}" এর কনভার্ট (${convert}) সফলভাবে সেভ করা হয়েছে!`);
   };
 
-  // Delete item from ranking
+  // Delete item from ranking (reliable, no blocked native confirm dialog)
   const handleDeleteItem = (id: string, role: 'leader' | 'trainer', name: string) => {
-    if (!confirm(`আপনি কি "${name}" কে র‍্যাঙ্কিং লিস্ট থেকে বাদ দিতে চান?`)) return;
-
     if (role === 'leader') {
-      const updated = effectiveLeaders.filter((i) => i.id !== id);
+      const base = customLeaders !== null ? customLeaders : effectiveLeaders;
+      const updated = base.filter((i) => i.id !== id);
       setCustomLeaders(updated);
     } else {
-      const updated = effectiveTrainers.filter((i) => i.id !== id);
+      const base = customTrainers !== null ? customTrainers : effectiveTrainers;
+      const updated = base.filter((i) => i.id !== id);
       setCustomTrainers(updated);
     }
-    showToast(`"${name}" কে র‍্যাঙ্কিং লিস্ট থেকে বাদ দেওয়া হয়েছে`);
+    showToast(`"${name}" কে র‍্যাঙ্কিং তালিকা থেকে বাদ দেওয়া হয়েছে`);
   };
 
   // Raw portal paste import inside Ranking section
@@ -729,12 +791,12 @@ export const RankingSection: React.FC<RankingSectionProps> = ({
     const result = parseRawPortalData(rawPasteText, rawPasteRole, rate);
 
     if (result.parsedItems.length === 0) {
-      alert('কোনো ভ্যালিড ডাটা পাওয়া যায়নি। অনুগ্রহ করে পোর্টাল থেকে কপি করা টেবিল টেক্সট পেস্ট করুন।');
+      showToast('কোনো ভ্যালিড ডাটা পাওয়া যায়নি। অনুগ্রহ করে পোর্টাল থেকে কপি করা টেবিল টেক্সট পেস্ট করুন।');
       return;
     }
 
     const newRankingItems: RankingMemberItem[] = result.parsedItems
-      .filter((p) => p.convert > 0 && !p.isZero)
+      .filter((p) => !p.isZero)
       .map((p, idx) => ({
         id: `raw-${Date.now()}-${idx}`,
         name: p.name,
@@ -804,7 +866,7 @@ export const RankingSection: React.FC<RankingSectionProps> = ({
       setIsDownloadMenuOpen(false);
     } catch (err) {
       console.error(err);
-      alert('র‍্যাঙ্কিং ডাউনলোডে সমস্যা হয়েছে। আবার চেষ্টা করুন।');
+      showToast('র‍্যাঙ্কিং ডাউনলোডে সমস্যা হয়েছে। আবার চেষ্টা করুন।');
     } finally {
       setIsDownloadingPDF(false);
       setIsDownloadingImage(false);
@@ -828,30 +890,33 @@ export const RankingSection: React.FC<RankingSectionProps> = ({
     return 'TEAM LEADER & TEAM TRAINER RANKING';
   };
 
-  // Aspect ratio styling classes
-  const getContainerFrameClasses = () => {
-    switch (frameRatio) {
-      case '9:16':
-        return 'w-full max-w-[500px] min-h-[880px] shadow-2xl rounded-2xl'; // TikTok / FB story vertical frame
-      case '4:5':
-        return 'w-full max-w-[580px] min-h-[725px] shadow-2xl rounded-2xl'; // Social post frame
-      case 'a4':
-      default:
-        return 'w-full max-w-[760px] min-h-[1050px] shadow-2xl rounded-xl'; // A4
-    }
-  };
+  // Aspect ratio styling classes (Strictly locked to 9:16 mobile story frame)
+  const getContainerFrameClasses = () =>
+    'w-full max-w-[460px] shadow-2xl rounded-2xl overflow-hidden';
 
-  const getExportFrameWidth = () => {
-    switch (frameRatio) {
-      case '9:16':
-        return '720px';
-      case '4:5':
-        return '800px';
-      case 'a4':
-      default:
-        return '900px';
-    }
-  };
+  const getContainerFrameStyle = (): React.CSSProperties => ({
+    width: '100%',
+    maxWidth: '460px',
+    aspectRatio: '9 / 16',
+    boxSizing: 'border-box',
+    display: 'flex',
+    flexDirection: 'column',
+    overflow: 'hidden',
+  });
+
+  const getExportFrameStyle = (): React.CSSProperties => ({
+    width: '1080px',
+    height: '1920px',
+    minWidth: '1080px',
+    maxWidth: '1080px',
+    minHeight: '1920px',
+    maxHeight: '1920px',
+    aspectRatio: '9 / 16',
+    boxSizing: 'border-box',
+    display: 'flex',
+    flexDirection: 'column',
+    overflow: 'hidden',
+  });
 
   return (
     <div className="space-y-6">
@@ -967,49 +1032,16 @@ export const RankingSection: React.FC<RankingSectionProps> = ({
 
         {/* Frame Format Selector & Export Row */}
         <div className="mt-4 pt-3.5 border-t border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-          {/* Ratio Selector (TikTok / FB Story vs Social Post vs A4) */}
+          {/* Ratio indicator: Strictly 9:16 locked for TikTok & Facebook Story */}
           <div className="flex items-center gap-2">
             <span className="text-xs text-slate-400 font-bold flex items-center gap-1">
               <Sliders className="w-3.5 h-3.5 text-amber-400" />
-              <span>ফ্রেম সাইজ:</span>
+              <span>র‍্যাঙ্কিং ফ্রেম:</span>
             </span>
 
-            <div className="flex items-center bg-slate-800 p-0.5 rounded-lg border border-slate-700 text-xs">
-              <button
-                onClick={() => setFrameRatio('9:16')}
-                className={`cursor-pointer px-2.5 py-1 rounded font-bold transition-all ${
-                  frameRatio === '9:16'
-                    ? 'bg-amber-500 text-slate-950 font-black shadow-xs'
-                    : 'text-slate-400 hover:text-white'
-                }`}
-                title="Mobile 9:16 Vertical Story (TikTok, Facebook Story, Reels)"
-              >
-                📱 9:16 মোবাইল ফ্রেম
-              </button>
-
-              <button
-                onClick={() => setFrameRatio('4:5')}
-                className={`cursor-pointer px-2.5 py-1 rounded font-bold transition-all ${
-                  frameRatio === '4:5'
-                    ? 'bg-amber-500 text-slate-950 font-black shadow-xs'
-                    : 'text-slate-400 hover:text-white'
-                }`}
-                title="Social Media 4:5 Portrait Post"
-              >
-                📲 4:5 পোস্ট
-              </button>
-
-              <button
-                onClick={() => setFrameRatio('a4')}
-                className={`cursor-pointer px-2.5 py-1 rounded font-bold transition-all ${
-                  frameRatio === 'a4'
-                    ? 'bg-amber-500 text-slate-950 font-black shadow-xs'
-                    : 'text-slate-400 hover:text-white'
-                }`}
-                title="Full A4 Sheet Format"
-              >
-                📄 A4
-              </button>
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-amber-500/15 border border-amber-500/40 text-amber-300 text-xs font-bold">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span>📱 ৯:১৬ মোবাইল রেশিও (টিকটক ও ফেসবুক স্টোরি সাইজে ফিক্সড লকড)</span>
             </div>
           </div>
 
@@ -1259,6 +1291,7 @@ export const RankingSection: React.FC<RankingSectionProps> = ({
           adminRole={metadata.adminRole}
           currentDateTime={currentDateTime}
           frameClasses={getContainerFrameClasses()}
+          frameStyle={getContainerFrameStyle()}
           showRoleBadge={activeTab === 'both'}
         />
       </div>
@@ -1290,7 +1323,7 @@ export const RankingSection: React.FC<RankingSectionProps> = ({
           adminName={metadata.adminName}
           adminRole={metadata.adminRole}
           currentDateTime={currentDateTime}
-          frameStyle={{ width: getExportFrameWidth() }}
+          frameStyle={getExportFrameStyle()}
           showRoleBadge={false}
         />
 
@@ -1304,7 +1337,7 @@ export const RankingSection: React.FC<RankingSectionProps> = ({
           adminName={metadata.adminName}
           adminRole={metadata.adminRole}
           currentDateTime={currentDateTime}
-          frameStyle={{ width: getExportFrameWidth() }}
+          frameStyle={getExportFrameStyle()}
           showRoleBadge={false}
         />
 
@@ -1318,7 +1351,7 @@ export const RankingSection: React.FC<RankingSectionProps> = ({
           adminName={metadata.adminName}
           adminRole={metadata.adminRole}
           currentDateTime={currentDateTime}
-          frameStyle={{ width: getExportFrameWidth() }}
+          frameStyle={getExportFrameStyle()}
           showRoleBadge={true}
         />
 
@@ -1332,7 +1365,7 @@ export const RankingSection: React.FC<RankingSectionProps> = ({
           adminName={metadata.adminName}
           adminRole={metadata.adminRole}
           currentDateTime={currentDateTime}
-          frameStyle={{ width: getExportFrameWidth() }}
+          frameStyle={getExportFrameStyle()}
           showRoleBadge={activeTab === 'both'}
         />
       </div>
@@ -1399,14 +1432,14 @@ export const RankingSection: React.FC<RankingSectionProps> = ({
                     <div className="flex items-center justify-end gap-1.5">
                       <button
                         onClick={() => setEditingItem(item)}
-                        className="cursor-pointer p-1.5 rounded hover:bg-slate-800 text-sky-400 hover:text-sky-300"
+                        className="cursor-pointer p-1.5 rounded hover:bg-slate-800 text-sky-400 hover:text-sky-300 transition-colors"
                         title="Edit convert or details"
                       >
                         <Edit2 className="w-3.5 h-3.5" />
                       </button>
                       <button
-                        onClick={() => handleDeleteItem(item.id, item.role, item.name)}
-                        className="cursor-pointer p-1.5 rounded hover:bg-slate-800 text-rose-400 hover:text-rose-300"
+                        onClick={() => setItemToDelete({ id: item.id, role: item.role, name: item.name })}
+                        className="cursor-pointer p-1.5 rounded hover:bg-rose-950/40 text-rose-400 hover:text-rose-300 transition-colors"
                         title="Remove from ranking"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -1480,13 +1513,14 @@ export const RankingSection: React.FC<RankingSectionProps> = ({
                 <input
                   type="number"
                   name="convert"
-                  required
-                  min="1"
-                  placeholder="যেমন: 31"
+                  defaultValue="0"
+                  min="0"
+                  step="1"
+                  placeholder="যেমন: 31 অথবা 0"
                   className="w-full p-2.5 rounded-lg bg-slate-800 border border-slate-700 text-emerald-400 font-mono font-bold text-sm focus:outline-hidden focus:border-emerald-500"
                 />
                 <p className="text-[10px] text-slate-400 mt-1">
-                  * র‍্যাঙ্কিংয়ে শুধুমাত্র এই কনভার্ট সংখ্যাটি প্রদর্শিত হবে।
+                  * ০ (শূন্য) সহ যেকোনো সংখ্যা দিতে পারেন।
                 </p>
               </div>
 
@@ -1494,13 +1528,13 @@ export const RankingSection: React.FC<RankingSectionProps> = ({
                 <button
                   type="button"
                   onClick={() => setIsAddModalOpen(false)}
-                  className="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300"
+                  className="cursor-pointer px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold"
                 >
                   বাতিল
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold shadow-md"
+                  className="cursor-pointer px-5 py-2 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold shadow-md"
                 >
                   যোগ করুন
                 </button>
@@ -1511,7 +1545,7 @@ export const RankingSection: React.FC<RankingSectionProps> = ({
       )}
 
       {/* =========================================================
-          EDIT MEMBER MODAL
+          EDIT MEMBER MODAL (Zero Allowed & Quick Delete Action)
          ========================================================= */}
       {editingItem && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-xs no-print">
@@ -1553,34 +1587,115 @@ export const RankingSection: React.FC<RankingSectionProps> = ({
 
               <div>
                 <label className="block text-slate-300 mb-1">
-                  কনভার্ট সংখ্যা (সরাসরি পরিবর্তন করুন)
+                  কনভার্ট সংখ্যা (০ বসিয়ে সেভ করা যাবে)
                 </label>
-                <input
-                  type="number"
-                  name="convert"
-                  defaultValue={editingItem.convert}
-                  required
-                  min="1"
-                  className="w-full p-2.5 rounded-lg bg-slate-800 border border-slate-700 text-emerald-400 font-mono font-bold text-sm focus:outline-hidden focus:border-emerald-500"
-                />
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    name="convert"
+                    defaultValue={editingItem.convert}
+                    min="0"
+                    step="1"
+                    className="w-full p-2.5 rounded-lg bg-slate-800 border border-slate-700 text-emerald-400 font-mono font-bold text-sm focus:outline-hidden focus:border-emerald-500"
+                  />
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      const input = e.currentTarget.parentElement?.querySelector('input[name="convert"]') as HTMLInputElement;
+                      if (input) input.value = '0';
+                    }}
+                    className="cursor-pointer px-3 py-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 text-xs font-bold border border-slate-700 shrink-0 transition-colors"
+                    title="কনভার্ট ০ সেট করুন"
+                  >
+                    ০ সেট
+                  </button>
+                </div>
+                <p className="text-[10px] text-slate-400 mt-1">
+                  * চাইলে ০ (শূন্য) বসিয়ে সেভ করতে পারেন অথবা নিচের বাটনে সরাসরি বাদ দিতে পারেন।
+                </p>
               </div>
 
-              <div className="pt-2 flex items-center justify-end gap-2">
+              <div className="pt-3 border-t border-slate-800 flex items-center justify-between gap-2">
                 <button
                   type="button"
-                  onClick={() => setEditingItem(null)}
-                  className="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300"
+                  onClick={() => {
+                    const toDel = editingItem;
+                    setEditingItem(null);
+                    handleDeleteItem(toDel.id, toDel.role, toDel.name);
+                  }}
+                  className="cursor-pointer px-3 py-2 rounded-lg bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 border border-rose-800/50 text-xs font-semibold flex items-center gap-1.5 transition-colors"
                 >
-                  বাতিল
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>তালিকা থেকে বাদ দিন</span>
                 </button>
-                <button
-                  type="submit"
-                  className="px-5 py-2 rounded-lg bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold shadow-md"
-                >
-                  আপডেট করুন
-                </button>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setEditingItem(null)}
+                    className="cursor-pointer px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold"
+                  >
+                    বাতিল
+                  </button>
+                  <button
+                    type="submit"
+                    className="cursor-pointer px-5 py-2 rounded-lg bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold shadow-md"
+                  >
+                    আপডেট করুন
+                  </button>
+                </div>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* =========================================================
+          DELETE CONFIRMATION MODAL (In-App Modal - 100% Reliable in iFrames)
+         ========================================================= */}
+      {itemToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-xs no-print animate-in fade-in">
+          <div className="bg-slate-900 border border-rose-500/40 rounded-2xl p-6 max-w-sm w-full shadow-2xl text-white space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-rose-500/20 text-rose-400 flex items-center justify-center shrink-0">
+                <Trash2 className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-white">র‍্যাঙ্কিং থেকে বাদ দিন</h3>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  আপনি কি নিশ্চিতভাবে এই সদস্যকে র‍্যাঙ্কিং তালিকা থেকে বাদ দিতে চান?
+                </p>
+              </div>
+            </div>
+
+            <div className="p-3 rounded-lg bg-slate-800/80 border border-slate-700/60 text-xs">
+              <div className="font-bold text-amber-300 text-sm">{itemToDelete.name}</div>
+              <div className="text-[11px] text-slate-400 mt-0.5">
+                {itemToDelete.role === 'leader' ? '👑 টিম লিডার' : '⚡ টিম ট্রেইনার'}
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setItemToDelete(null)}
+                className="cursor-pointer px-3.5 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold"
+              >
+                বাতিল
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const target = itemToDelete;
+                  setItemToDelete(null);
+                  handleDeleteItem(target.id, target.role, target.name);
+                }}
+                className="cursor-pointer px-4 py-2 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-md shadow-rose-900/30"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>হ্যাঁ, বাদ দিন</span>
+              </button>
+            </div>
           </div>
         </div>
       )}

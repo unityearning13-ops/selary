@@ -103,11 +103,24 @@ const RankingCardPoster: React.FC<{
   showRoleBadge = false,
 }) => {
   const totalConverts = useMemo(
-    () => items.reduce((sum, item) => sum + (item.convert || 0), 0),
+    () => items.reduce((sum, item) => sum + (Number(item.convert) || 0), 0),
     [items]
   );
 
-  const highestConvert = items.length > 0 ? items[0].convert : 0;
+  const displayTotalConverts = useMemo(() => {
+    return Math.abs(totalConverts - Math.round(totalConverts)) < 0.001
+      ? Math.round(totalConverts).toString()
+      : totalConverts.toFixed(2).replace(/\.00$/, '');
+  }, [totalConverts]);
+
+  const displayTopScore = useMemo(() => {
+    if (items.length === 0) return '0';
+    const top = Number(items[0].convert) || 0;
+    return Math.abs(top - Math.round(top)) < 0.001
+      ? Math.round(top).toString()
+      : top.toFixed(2).replace(/\.00$/, '');
+  }, [items]);
+
   const englishPeriod = toEnglishDigitsAndText(periodMonth || 'OCTOBER 2026').toUpperCase();
   const englishDate = toEnglishDigitsAndText(currentDateTime?.date || new Date().toLocaleDateString('en-GB'));
   const englishTime = toEnglishDigitsAndText(currentDateTime?.time || new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }));
@@ -118,12 +131,122 @@ const RankingCardPoster: React.FC<{
       ? 'TEAM LEADER & TEAM TRAINER RANKING'
       : 'OFFICIAL PERFORMANCE RANKING');
 
-  // Single layer layout with adaptive row density to fill vertical 9:16 space cleanly
+  // Single layer layout with granular adaptive density so ALL rows fit in 9:16 frame without cutoffs
   const count = items.length;
-  const isCompact = count > 10;
-  const isVeryCompact = count > 20;
-  const isUltraCompact = count > 32;
+  const isMicro = count > 38;             // 39+ items
+  const isUltra = count > 26 && !isMicro;  // 27 - 38 items (e.g. 32 items in screenshot)
+  const isVeryCompact = count > 18 && !isUltra && !isMicro; // 19 - 26 items
+  const isCompact = count > 10 && count <= 18; // 11 - 18 items (e.g. 16 items)
+  const isSpacious = count <= 10;          // 1 - 10 items
 
+  // Proportional layout tokens
+  const headerPadding = isMicro
+    ? 'px-3 py-1.5'
+    : isUltra
+    ? 'px-4 py-2'
+    : isVeryCompact
+    ? 'px-4 py-2.5'
+    : 'px-5 py-3 sm:py-3.5';
+
+  const titleFontSize = isMicro
+    ? 'text-xs font-black'
+    : isUltra
+    ? 'text-xs sm:text-[13px] font-black'
+    : isVeryCompact
+    ? 'text-sm font-black'
+    : 'text-base sm:text-lg font-black';
+
+  const rankTitleFontSize = isMicro
+    ? 'text-[10px] font-black'
+    : isUltra
+    ? 'text-[11px] font-black'
+    : isVeryCompact
+    ? 'text-xs font-black'
+    : 'text-xs sm:text-sm font-black';
+
+  const ribbonPadding = isMicro
+    ? 'px-2 py-1'
+    : isUltra
+    ? 'px-3 py-1'
+    : 'px-4 py-1.5 sm:py-2';
+
+  const tableContainerPadding = isMicro
+    ? 'px-2 py-1'
+    : isUltra
+    ? 'px-2.5 py-1.5'
+    : 'px-3 sm:px-4 py-2';
+
+  const tableHeaderPadding = isMicro
+    ? 'px-2 py-1 text-[8.5px]'
+    : isUltra
+    ? 'px-2.5 py-1 text-[9px]'
+    : isVeryCompact
+    ? 'px-3 py-1.25 text-[9.5px]'
+    : 'px-3 sm:px-4 py-2 text-[10.5px] sm:text-[11px]';
+
+  const footerPadding = isMicro
+    ? 'px-3 py-1.5'
+    : isUltra
+    ? 'px-3.5 py-2'
+    : 'px-4 sm:px-5 py-2.5 sm:py-3';
+
+  const badgeSize = isMicro
+    ? '13px'
+    : isUltra
+    ? '15px'
+    : isVeryCompact
+    ? '17px'
+    : isCompact
+    ? '19px'
+    : '22px';
+
+  const badgeFontSize = isMicro
+    ? '6.5px'
+    : isUltra
+    ? '7.5px'
+    : isVeryCompact
+    ? '8px'
+    : isCompact
+    ? '8.5px'
+    : '10px';
+
+  const rowNameFontSize = isMicro
+    ? '7.5px'
+    : isUltra
+    ? '8.5px'
+    : isVeryCompact
+    ? '9.5px'
+    : isCompact
+    ? '10.5px'
+    : '11.5px';
+
+  const convBadgeFontSize = isMicro
+    ? '7px'
+    : isUltra
+    ? '7.5px'
+    : isVeryCompact
+    ? '8.5px'
+    : isCompact
+    ? '9.5px'
+    : '11px';
+
+  const convBadgePadding = isMicro
+    ? '0px 3px'
+    : isUltra
+    ? '0.5px 4px'
+    : isVeryCompact
+    ? '1px 5px'
+    : '1.5px 6px';
+
+  const rowPaddingY = isMicro
+    ? 'py-0'
+    : isUltra
+    ? 'py-0.5'
+    : isVeryCompact
+    ? 'py-1'
+    : isCompact
+    ? 'py-1.25'
+    : 'py-1.5';
 
   const renderRow = (item: RankingMemberItem, rankNumber: number) => {
     const isTop1 = rankNumber === 1;
@@ -131,19 +254,18 @@ const RankingCardPoster: React.FC<{
     const isTop3 = rankNumber === 3;
     const rowBg = rankNumber % 2 === 0 ? '#f8fafc' : '#ffffff';
 
+    const formattedConvert =
+      typeof item.convert === 'number' && !Number.isInteger(item.convert)
+        ? Number(item.convert.toFixed(2))
+        : item.convert;
+
     return (
       <div
         key={`item-${item.id}-${rankNumber}`}
-        className={`grid grid-cols-12 items-center transition-colors ${
-          isUltraCompact
-            ? 'px-2 py-0.5 text-[8px]'
-            : isVeryCompact
-            ? 'px-2.5 py-1 text-[9.5px]'
-            : isCompact
-            ? 'px-3 py-1.5 text-[11px]'
-            : 'px-4 py-2 text-xs'
-        }`}
+        className={`grid grid-cols-12 items-center transition-colors px-2 ${rowPaddingY}`}
         style={{
+          flex: isSpacious ? '0 0 auto' : '1 1 0%',
+          minHeight: isSpacious ? '36px' : 0,
           backgroundColor: isTop1
             ? '#fffdf0'
             : isTop2
@@ -151,7 +273,7 @@ const RankingCardPoster: React.FC<{
             : isTop3
             ? '#fffaf5'
             : rowBg,
-          borderBottom: '1px solid #f1f5f9',
+          borderBottom: isMicro ? '0.5px solid #f1f5f9' : '1px solid #f1f5f9',
           borderLeft: isTop1
             ? '3px solid #f59e0b'
             : isTop2
@@ -165,50 +287,52 @@ const RankingCardPoster: React.FC<{
         <div className="col-span-2 flex items-center justify-center">
           {isTop1 ? (
             <span
-              className="inline-flex items-center justify-center font-black rounded-full shadow-2xs"
+              className="inline-flex items-center justify-center font-black rounded-full shadow-2xs shrink-0"
               style={{
                 backgroundColor: '#f59e0b',
                 color: '#ffffff',
-                fontSize: isUltraCompact ? '7px' : isVeryCompact ? '8px' : isCompact ? '9px' : '11px',
-                padding: isUltraCompact ? '1px 3px' : '1.5px 5px',
+                fontSize: badgeFontSize,
+                width: badgeSize,
+                height: badgeSize,
               }}
             >
               🥇1
             </span>
           ) : isTop2 ? (
             <span
-              className="inline-flex items-center justify-center font-black rounded-full shadow-2xs"
+              className="inline-flex items-center justify-center font-black rounded-full shadow-2xs shrink-0"
               style={{
                 backgroundColor: '#94a3b8',
                 color: '#ffffff',
-                fontSize: isUltraCompact ? '7px' : isVeryCompact ? '8px' : isCompact ? '9px' : '11px',
-                padding: isUltraCompact ? '1px 3px' : '1.5px 5px',
+                fontSize: badgeFontSize,
+                width: badgeSize,
+                height: badgeSize,
               }}
             >
               🥈2
             </span>
           ) : isTop3 ? (
             <span
-              className="inline-flex items-center justify-center font-black rounded-full shadow-2xs"
+              className="inline-flex items-center justify-center font-black rounded-full shadow-2xs shrink-0"
               style={{
                 backgroundColor: '#d97706',
                 color: '#ffffff',
-                fontSize: isUltraCompact ? '7px' : isVeryCompact ? '8px' : isCompact ? '9px' : '11px',
-                padding: isUltraCompact ? '1px 3px' : '1.5px 5px',
+                fontSize: badgeFontSize,
+                width: badgeSize,
+                height: badgeSize,
               }}
             >
               🥉3
             </span>
           ) : (
             <span
-              className="inline-flex items-center justify-center font-bold rounded-full"
+              className="inline-flex items-center justify-center font-bold rounded-full bg-white shrink-0"
               style={{
-                backgroundColor: '#f1f5f9',
                 color: '#475569',
-                border: '1px solid #e2e8f0',
-                fontSize: isUltraCompact ? '7px' : isVeryCompact ? '8px' : isCompact ? '9px' : '10.5px',
-                minWidth: isUltraCompact ? '14px' : '18px',
-                height: isUltraCompact ? '14px' : '18px',
+                border: '1px solid #cbd5e1',
+                fontSize: badgeFontSize,
+                width: badgeSize,
+                height: badgeSize,
               }}
             >
               {rankNumber}
@@ -224,13 +348,8 @@ const RankingCardPoster: React.FC<{
                 isTop1 ? 'text-[#0f172a] font-black' : 'text-[#1e293b]'
               }`}
               style={{
-                fontSize: isUltraCompact
-                  ? '8px'
-                  : isVeryCompact
-                  ? '9px'
-                  : isCompact
-                  ? '10px'
-                  : '12px',
+                fontSize: rowNameFontSize,
+                lineHeight: 1.1,
               }}
               title={item.name}
             >
@@ -243,24 +362,24 @@ const RankingCardPoster: React.FC<{
                   backgroundColor: item.role === 'leader' ? '#dbeafe' : '#dcfce7',
                   color: item.role === 'leader' ? '#1e40af' : '#166534',
                   border: `0.5px solid ${item.role === 'leader' ? '#bfdbfe' : '#bbf7d0'}`,
-                  fontSize: '6.5px',
+                  fontSize: isMicro ? '5.5px' : '6.5px',
                 }}
               >
                 {item.role === 'leader' ? 'TL' : 'TT'}
               </span>
             )}
           </div>
-          {!isCompact && item.emailOrPhone && (
+          {isSpacious && item.emailOrPhone && (
             <div className="text-[9px] text-[#64748b] truncate mt-0.5">
               {item.emailOrPhone}
             </div>
           )}
         </div>
 
-        {/* Convert Count Badge */}
+        {/* Convert Count Badge (Exact lowercase 'conv' like screenshot) */}
         <div className="col-span-3 text-right flex items-center justify-end">
           <span
-            className="inline-flex items-center gap-0.5 rounded-full font-black shadow-2xs"
+            className="inline-flex items-center gap-0.5 rounded-full font-black shadow-2xs shrink-0"
             style={{
               backgroundColor: isTop1
                 ? '#fef3c7'
@@ -279,12 +398,12 @@ const RankingCardPoster: React.FC<{
               border: `1px solid ${
                 isTop1 ? '#fde68a' : isTop2 ? '#cbd5e1' : isTop3 ? '#fed7aa' : '#e2e8f0'
               }`,
-              fontSize: isUltraCompact ? '7.5px' : isVeryCompact ? '8.5px' : isCompact ? '9.5px' : '11px',
-              padding: isUltraCompact ? '1px 3px' : '1.5px 5px',
+              fontSize: convBadgeFontSize,
+              padding: convBadgePadding,
             }}
           >
-            <span>{item.convert}</span>
-            <span style={{ fontSize: '6.5px', opacity: 0.85 }}>CONV</span>
+            <span>{formattedConvert}</span>
+            <span className="font-semibold lowercase" style={{ fontSize: '0.85em', opacity: 0.85 }}>conv</span>
           </span>
         </div>
       </div>
@@ -307,15 +426,15 @@ const RankingCardPoster: React.FC<{
     >
       {/* Top Accent Stripe */}
       <div
-        className="h-2 w-full shrink-0"
+        className="h-1.5 sm:h-2 w-full shrink-0"
         style={{
           background: 'linear-gradient(90deg, #0f172a 0%, #1e3a8a 30%, #f59e0b 60%, #10b981 100%)',
         }}
       />
 
-      {/* Poster Header (100% English, Compact & Elegant) */}
+      {/* Poster Header (100% English, Adaptive & Elegant) */}
       <div
-        className="px-5 py-3 sm:py-3.5 text-center relative shrink-0"
+        className={`${headerPadding} text-center relative shrink-0`}
         style={{
           backgroundColor: '#0f172a',
           color: '#ffffff',
@@ -324,28 +443,28 @@ const RankingCardPoster: React.FC<{
       >
         {/* Golden Glow Corporate Badge */}
         <div
-          className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest mb-1.5 shadow-xs"
+          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full ${isMicro || isUltra ? 'text-[8px] mb-0.5' : 'text-[9px] mb-1.5'} font-black uppercase tracking-widest shadow-xs`}
           style={{
             backgroundColor: '#fffbeb',
             color: '#b45309',
             border: '1px solid #fde68a',
           }}
         >
-          <Trophy className="w-3 h-3 text-[#d97706] fill-current" />
+          <Trophy className={`${isMicro || isUltra ? 'w-2.5 h-2.5' : 'w-3 h-3'} text-[#d97706] fill-current`} />
           <span>OFFICIAL PERFORMANCE LEADERBOARD</span>
         </div>
 
         {/* Platform Name */}
         <h1
-          className="text-base sm:text-xl font-black tracking-wider uppercase text-white leading-tight"
-          style={{ color: '#ffffff', letterSpacing: '0.04em' }}
+          className={`${titleFontSize} tracking-wider uppercase text-white leading-tight`}
+          style={{ color: '#ffffff', letterSpacing: '0.03em' }}
         >
           UNITY EARNING & LEARNING PLATFORM
         </h1>
 
         {/* Dynamic Ranking Title */}
         <h2
-          className="text-xs sm:text-base font-black mt-0.5 uppercase tracking-wide leading-tight"
+          className={`${rankTitleFontSize} mt-0.5 uppercase tracking-wide leading-tight`}
           style={{ color: '#fbbf24' }}
         >
           {resolvedTitle}
@@ -353,7 +472,7 @@ const RankingCardPoster: React.FC<{
 
         {/* Subtitle & Evaluation Period */}
         <div
-          className="text-[9.5px] sm:text-[10px] font-semibold mt-1 flex items-center justify-center gap-1.5 flex-wrap uppercase tracking-wider leading-tight"
+          className={`${isMicro || isUltra ? 'text-[8px] mt-0.5' : 'text-[9.5px] sm:text-[10px] mt-1'} font-semibold flex items-center justify-center gap-1.5 flex-wrap uppercase tracking-wider leading-tight`}
           style={{ color: '#94a3b8' }}
         >
           <span>{subTitle || 'Performance Evaluation'}</span>
@@ -364,47 +483,47 @@ const RankingCardPoster: React.FC<{
 
       {/* Metric Summary Ribbon (Shrink-0) */}
       <div
-        className="px-4 py-1.5 sm:py-2 flex items-center justify-around text-center text-xs border-b shadow-2xs shrink-0"
+        className={`${ribbonPadding} flex items-center justify-around text-center border-b shadow-2xs shrink-0`}
         style={{
           backgroundColor: '#f8fafc',
           borderColor: '#e2e8f0',
         }}
       >
         <div className="flex flex-col items-center">
-          <span className="text-[9px] font-extrabold uppercase tracking-wider" style={{ color: '#64748b' }}>
+          <span className={`${isMicro || isUltra ? 'text-[8px]' : 'text-[9px]'} font-extrabold uppercase tracking-wider`} style={{ color: '#64748b' }}>
             PARTICIPANTS
           </span>
-          <span className="text-xs sm:text-sm font-black" style={{ color: '#0f172a' }}>
+          <span className={`${isMicro || isUltra ? 'text-xs' : 'text-xs sm:text-sm'} font-black`} style={{ color: '#0f172a' }}>
             {items.length}
           </span>
         </div>
-        <div className="h-5 w-px" style={{ backgroundColor: '#cbd5e1' }} />
+        <div className="h-4 sm:h-5 w-px" style={{ backgroundColor: '#cbd5e1' }} />
         <div className="flex flex-col items-center">
-          <span className="text-[9px] font-extrabold uppercase tracking-wider" style={{ color: '#64748b' }}>
+          <span className={`${isMicro || isUltra ? 'text-[8px]' : 'text-[9px]'} font-extrabold uppercase tracking-wider`} style={{ color: '#64748b' }}>
             TOTAL CONVERTS
           </span>
-          <span className="text-xs sm:text-sm font-black" style={{ color: '#2563eb' }}>
-            {totalConverts}
+          <span className={`${isMicro || isUltra ? 'text-xs' : 'text-xs sm:text-sm'} font-black`} style={{ color: '#2563eb' }}>
+            {displayTotalConverts}
           </span>
         </div>
-        <div className="h-5 w-px" style={{ backgroundColor: '#cbd5e1' }} />
+        <div className="h-4 sm:h-5 w-px" style={{ backgroundColor: '#cbd5e1' }} />
         <div className="flex flex-col items-center">
-          <span className="text-[9px] font-extrabold uppercase tracking-wider" style={{ color: '#64748b' }}>
+          <span className={`${isMicro || isUltra ? 'text-[8px]' : 'text-[9px]'} font-extrabold uppercase tracking-wider`} style={{ color: '#64748b' }}>
             TOP SCORE
           </span>
-          <span className="text-xs sm:text-sm font-black" style={{ color: '#d97706' }}>
-            {highestConvert}
+          <span className={`${isMicro || isUltra ? 'text-xs' : 'text-xs sm:text-sm'} font-black`} style={{ color: '#d97706' }}>
+            {displayTopScore}
           </span>
         </div>
       </div>
 
       {/* =========================================================================
-          RANKING LIST TABLE CONTAINER (FLEX-1, OVERFLOW-HIDDEN, EXACT 9:16 ENFORCED)
-          Fits all data with single-column or auto-switched 2-column layout
+          RANKING LIST TABLE CONTAINER (FLEX-1, OVERFLOW-HIDDEN, STRICT 9:16 ENFORCED)
+          Single layer layout with proportional flex rows filling exact height
          ========================================================================= */}
       <div
-        className="px-3 sm:px-4 py-2 flex flex-col justify-start overflow-hidden"
-        style={{ flex: '1 1 0%', minHeight: 0 }}
+        className={`${tableContainerPadding} flex flex-col justify-start overflow-hidden flex-1`}
+        style={{ minHeight: 0 }}
       >
         {items.length === 0 ? (
           <div
@@ -417,14 +536,14 @@ const RankingCardPoster: React.FC<{
           /* Single Column Single-Layer Standard Layout */
           <div className="rounded-xl overflow-hidden border border-[#cbd5e1] flex flex-col min-h-0 bg-white shadow-xs flex-1">
             <div
-              className="grid grid-cols-12 px-3 sm:px-4 py-2 text-[10.5px] sm:text-[11px] font-black tracking-wider uppercase items-center shrink-0"
+              className={`grid grid-cols-12 ${tableHeaderPadding} font-black tracking-wider uppercase items-center shrink-0`}
               style={{ backgroundColor: '#0f172a', color: '#ffffff' }}
             >
               <div className="col-span-2 text-center">RANK</div>
               <div className="col-span-7 text-left">NAME & DESIGNATION</div>
               <div className="col-span-3 text-right">CONVERT</div>
             </div>
-            <div className="flex-1 min-h-0 overflow-hidden flex flex-col justify-start">
+            <div className="flex-1 min-h-0 overflow-hidden flex flex-col justify-between">
               {items.map((item, idx) => renderRow(item, idx + 1))}
             </div>
           </div>
@@ -433,7 +552,7 @@ const RankingCardPoster: React.FC<{
 
       {/* Official Admin Verification & Signature Footer (Shrink-0) */}
       <div
-        className="px-4 sm:px-5 py-2.5 sm:py-3.5 mt-auto shrink-0"
+        className={`${footerPadding} mt-auto shrink-0`}
         style={{
           backgroundColor: '#f8fafc',
           borderTop: '1px solid #e2e8f0',
@@ -441,31 +560,31 @@ const RankingCardPoster: React.FC<{
       >
         <div className="flex items-end justify-between gap-3">
           {/* Left Side: Verification Badge & Date/Time */}
-          <div className="space-y-1 text-left">
+          <div className="space-y-0.5 text-left">
             <div
-              className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[9.5px] sm:text-[10.5px] font-bold shadow-2xs"
+              className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full ${isMicro || isUltra ? 'text-[8.5px]' : 'text-[9.5px] sm:text-[10px]'} font-bold shadow-2xs`}
               style={{
                 backgroundColor: '#ecfdf5',
                 color: '#065f46',
                 border: '1px solid #a7f3d0',
               }}
             >
-              <CheckCircle2 className="w-3 h-3 text-[#059669] shrink-0" />
+              <CheckCircle2 className={`${isMicro || isUltra ? 'w-2.5 h-2.5' : 'w-3 h-3'} text-[#059669] shrink-0`} />
               <span>Verified & Approved by Admin</span>
             </div>
 
-            <div className="text-[9.5px] sm:text-[10px] font-medium" style={{ color: '#64748b' }}>
+            <div className={`${isMicro || isUltra ? 'text-[8.5px]' : 'text-[9.5px]'} font-medium`} style={{ color: '#64748b' }}>
               <span>
                 DATE: <strong style={{ color: '#0f172a' }}>{englishDate}</strong>
               </span>
-              <span className="mx-1.5">•</span>
+              <span className="mx-1">•</span>
               <span>
                 TIME: <strong style={{ color: '#0f172a' }}>{englishTime}</strong>
               </span>
             </div>
 
             <div
-              className="text-[8.5px] sm:text-[9px] font-black uppercase tracking-widest"
+              className={`${isMicro || isUltra ? 'text-[7.5px]' : 'text-[8.5px]'} font-black uppercase tracking-wider`}
               style={{ color: '#94a3b8' }}
             >
               UNITY EARNING & LEARNING PLATFORM
@@ -473,10 +592,10 @@ const RankingCardPoster: React.FC<{
           </div>
 
           {/* Right Side: Admin Signature */}
-          <div className="flex flex-col items-center text-center min-w-[140px] sm:min-w-[160px]">
-            <div className="h-6 sm:h-7 flex items-center justify-center select-none">
+          <div className="flex flex-col items-center text-center min-w-[120px] sm:min-w-[140px]">
+            <div className={`${isMicro || isUltra ? 'h-5' : 'h-6 sm:h-7'} flex items-center justify-center select-none`}>
               <svg
-                className="w-32 sm:w-36 h-6 sm:h-7"
+                className={`${isMicro || isUltra ? 'w-24 h-4 sm:h-5' : 'w-32 sm:w-36 h-5 sm:h-6'}`}
                 viewBox="0 0 220 50"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
@@ -498,34 +617,23 @@ const RankingCardPoster: React.FC<{
             </div>
 
             <div
-              className="w-32 sm:w-36 h-px mt-0.5 mb-1"
+              className={`${isMicro || isUltra ? 'w-24 sm:w-28' : 'w-32 sm:w-36'} h-px mt-0.5 mb-0.5`}
               style={{ backgroundColor: '#94a3b8' }}
             />
 
             <div
-              className="text-[10px] sm:text-[11px] font-black tracking-wider uppercase leading-none"
+              className={`${isMicro || isUltra ? 'text-[9px]' : 'text-[10px] sm:text-[11px]'} font-black tracking-wider uppercase leading-none`}
               style={{ color: '#0f172a' }}
             >
               {adminName || 'JIHADUL ISLAM'}
             </div>
             <div
-              className="text-[8.5px] sm:text-[9.5px] font-semibold mt-0.5 leading-none"
+              className={`${isMicro || isUltra ? 'text-[7px]' : 'text-[8px] sm:text-[8.5px]'} font-semibold mt-0.5 leading-none`}
               style={{ color: '#475569' }}
             >
               {adminRole || 'Executive Admin & Managing Director'}
             </div>
           </div>
-        </div>
-
-        {/* Bottom Bar Authenticity Stamp */}
-        <div
-          className="mt-2 pt-1 border-t text-center text-[8px] font-black tracking-widest uppercase"
-          style={{
-            borderColor: '#e2e8f0',
-            color: '#94a3b8',
-          }}
-        >
-          OFFICIAL PERFORMANCE DOCUMENT • 9:16 MOBILE LEADERBOARD • AUTHENTIC RECORD
         </div>
       </div>
     </div>
@@ -868,17 +976,18 @@ export const RankingSection: React.FC<RankingSectionProps> = ({
   });
 
   const getExportFrameStyle = (): React.CSSProperties => ({
-    width: '1080px',
-    height: '1920px',
-    minWidth: '1080px',
-    maxWidth: '1080px',
-    minHeight: '1920px',
-    maxHeight: '1920px',
+    width: '480px',
+    height: '853.33px',
+    minWidth: '480px',
+    maxWidth: '480px',
+    minHeight: '853.33px',
+    maxHeight: '853.33px',
     aspectRatio: '9 / 16',
     boxSizing: 'border-box',
     display: 'flex',
     flexDirection: 'column',
     overflow: 'hidden',
+    backgroundColor: '#ffffff',
   });
 
   return (
@@ -1281,7 +1390,7 @@ export const RankingSection: React.FC<RankingSectionProps> = ({
           id="ranking-poster-export-leader"
           items={effectiveLeaders}
           title="TEAM LEADER RANKING"
-          subTitle="Official Performance Leaderboard"
+          subTitle="Official Team Leader Ranking"
           periodMonth={metadata.periodMonth}
           adminName={metadata.adminName}
           adminRole={metadata.adminRole}
@@ -1295,7 +1404,7 @@ export const RankingSection: React.FC<RankingSectionProps> = ({
           id="ranking-poster-export-trainer"
           items={effectiveTrainers}
           title="TEAM TRAINER RANKING"
-          subTitle="Official Performance Leaderboard"
+          subTitle="Official Team Trainer Ranking"
           periodMonth={metadata.periodMonth}
           adminName={metadata.adminName}
           adminRole={metadata.adminRole}

@@ -63,6 +63,9 @@ function prepareClonedDoc(clonedDoc: Document) {
     'salary-sheet-document',
     'ranking-poster-export',
     'ranking-poster-view',
+    'ranking-poster-export-leader',
+    'ranking-poster-export-trainer',
+    'ranking-poster-export-both',
   ];
 
   for (const tId of targetIds) {
@@ -224,7 +227,8 @@ export async function downloadRankingPosterImage(
     throw new Error('Ranking poster element not found for export');
   }
 
-  const { dataUrl } = await captureElement(element, 'png', 2.8);
+  // 480px width * 2.25 = 1080px, 853.33px height * 2.25 = 1920px (Strict 9:16 Full HD)
+  const { dataUrl } = await captureElement(element, 'png', 2.25);
 
   const link = document.createElement('a');
   link.download = filename.endsWith('.png') ? filename : `${filename}.png`;

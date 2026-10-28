@@ -9,6 +9,7 @@ import {
   RATE_TEAM_LEADER,
   RATE_TEAM_TRAINER,
   calculateSectionTotals,
+  getEmployeeBalance,
 } from './utils/calculations';
 import {
   downloadSalarySheetImage,
@@ -338,9 +339,12 @@ export default function App() {
     showToast('All cleared! Ready for new payroll data.');
   };
 
-  // Section totals for quick stats
-  const leaderTotals = calculateSectionTotals(teamLeaders, RATE_TEAM_LEADER);
-  const trainerTotals = calculateSectionTotals(teamTrainers, RATE_TEAM_TRAINER);
+  // Section totals for quick stats - Filter out zero balance as requested for Salary Sheet context
+  const activeLeadersForStats = teamLeaders.filter(emp => getEmployeeBalance(emp, RATE_TEAM_LEADER) > 0);
+  const activeTrainersForStats = teamTrainers.filter(emp => getEmployeeBalance(emp, RATE_TEAM_TRAINER) > 0);
+  
+  const leaderTotals = calculateSectionTotals(activeLeadersForStats, RATE_TEAM_LEADER);
+  const trainerTotals = calculateSectionTotals(activeTrainersForStats, RATE_TEAM_TRAINER);
 
   return (
     <div className="min-h-screen bg-slate-100/90 text-slate-800 flex flex-col font-sans">
@@ -424,8 +428,8 @@ export default function App() {
         <StatsOverview
           leaderTotals={leaderTotals}
           trainerTotals={trainerTotals}
-          leaderCount={teamLeaders.length}
-          trainerCount={teamTrainers.length}
+          leaderCount={activeLeadersForStats.length}
+          trainerCount={activeTrainersForStats.length}
         />
 
         {/* View Layouts */}
@@ -449,7 +453,7 @@ export default function App() {
                     }`}
                   >
                     <Users className="w-3.5 h-3.5" />
-                    <span>উভয় একসাথে ({teamLeaders.length + teamTrainers.length})</span>
+                    <span>উভয় একসাথে ({activeLeadersForStats.length + activeTrainersForStats.length})</span>
                   </button>
                   <button
                     onClick={() => setSalaryPreviewFilter('leaders')}
@@ -460,7 +464,7 @@ export default function App() {
                     }`}
                   >
                     <Crown className="w-3.5 h-3.5 text-amber-500" />
-                    <span>শুধু টিম লিডার ({teamLeaders.length})</span>
+                    <span>শুধু টিম লিডার ({activeLeadersForStats.length})</span>
                   </button>
                   <button
                     onClick={() => setSalaryPreviewFilter('trainers')}
@@ -471,7 +475,7 @@ export default function App() {
                     }`}
                   >
                     <Award className="w-3.5 h-3.5 text-emerald-500" />
-                    <span>শুধু টিম ট্রেইনার ({teamTrainers.length})</span>
+                    <span>শুধু টিম ট্রেইনার ({activeTrainersForStats.length})</span>
                   </button>
                 </div>
               </div>

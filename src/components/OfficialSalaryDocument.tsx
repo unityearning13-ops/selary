@@ -38,6 +38,34 @@ export const OfficialSalaryDocument: React.FC<OfficialSalaryDocumentProps> = ({
   generatedTime,
   sectionFilter = 'all',
 }) => {
+  // 1. Filter and Sort Team Leaders
+  const processedLeaders = React.useMemo(() => {
+    return teamLeaders
+      .filter((emp) => {
+        const balance = getEmployeeBalance(emp, RATE_TEAM_LEADER);
+        return balance > 0 && (emp.name?.trim() || '');
+      })
+      .sort((a, b) => {
+        const convA = parseNumber(a.convert);
+        const convB = parseNumber(b.convert);
+        return convB - convA;
+      });
+  }, [teamLeaders]);
+
+  // 2. Filter and Sort Team Trainers
+  const processedTrainers = React.useMemo(() => {
+    return teamTrainers
+      .filter((emp) => {
+        const balance = getEmployeeBalance(emp, RATE_TEAM_TRAINER);
+        return balance > 0 && (emp.name?.trim() || '');
+      })
+      .sort((a, b) => {
+        const convA = parseNumber(a.convert);
+        const convB = parseNumber(b.convert);
+        return convB - convA;
+      });
+  }, [teamTrainers]);
+
   return (
     <div
       id={id}
@@ -201,7 +229,7 @@ export const OfficialSalaryDocument: React.FC<OfficialSalaryDocumentProps> = ({
               </tr>
             </thead>
             <tbody>
-              {teamLeaders.map((emp, index) => {
+              {processedLeaders.map((emp, index) => {
                 const balance = getEmployeeBalance(emp, RATE_TEAM_LEADER);
                 const totalAmount = getEmployeeTotalAmount(emp, RATE_TEAM_LEADER);
                 const bonusVal = parseNumber(emp.bonus);
@@ -308,7 +336,7 @@ export const OfficialSalaryDocument: React.FC<OfficialSalaryDocumentProps> = ({
               </tr>
             </thead>
             <tbody>
-              {teamTrainers.map((emp, index) => {
+              {processedTrainers.map((emp, index) => {
                 const balance = getEmployeeBalance(emp, RATE_TEAM_TRAINER);
                 const totalAmount = getEmployeeTotalAmount(emp, RATE_TEAM_TRAINER);
                 const bonusVal = parseNumber(emp.bonus);

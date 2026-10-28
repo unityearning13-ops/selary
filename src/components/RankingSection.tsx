@@ -32,7 +32,7 @@ export interface RankingMemberItem {
   emailOrPhone?: string;
   balance: number;
   convert: number;
-  role: 'leader' | 'trainer';
+  role: 'leader' | 'trainer' | 'senior';
   isCustom?: boolean;
 }
 
@@ -543,7 +543,7 @@ const RankingCardPoster: React.FC<{
               <div className="col-span-7 text-left">NAME & DESIGNATION</div>
               <div className="col-span-3 text-right">CONVERT</div>
             </div>
-            <div className="flex-1 min-h-0 overflow-hidden flex flex-col justify-between">
+            <div className="flex-1 min-h-0 overflow-hidden flex flex-col justify-start">
               {items.map((item, idx) => renderRow(item, idx + 1))}
             </div>
           </div>
@@ -640,6 +640,277 @@ const RankingCardPoster: React.FC<{
   );
 };
 
+/**
+ * Premium Combined Ranking Poster Component (Screenshot Matching)
+ * Used specifically for the "Combined" (Both Together) export view.
+ */
+const PremiumCombinedPoster: React.FC<{
+  id: string;
+  seniorLeaders: RankingMemberItem[];
+  leaders: RankingMemberItem[];
+  trainers: RankingMemberItem[];
+  showSeniorLeaders: boolean;
+  metadata: SalarySheetMetadata;
+  currentDateTime: { date: string; time: string };
+  frameStyle?: React.CSSProperties;
+}> = ({
+  id,
+  seniorLeaders,
+  leaders,
+  trainers,
+  showSeniorLeaders,
+  metadata,
+  currentDateTime,
+  frameStyle = {},
+}) => {
+  return (
+    <div
+      id={id}
+      className="bg-white relative flex flex-col overflow-hidden"
+      style={{
+        width: '800px',
+        minHeight: '1140px',
+        fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+        ...frameStyle,
+      }}
+    >
+      {/* 1. Header Area */}
+      <div className="px-10 py-6 flex items-center justify-between">
+        <div className="flex items-center gap-5">
+          {/* Platform Logo Box */}
+          <div className="w-20 h-20 bg-[#004b8d] rounded-2xl flex items-center justify-center p-2 shadow-lg">
+            <div className="w-full h-full bg-white rounded-xl flex items-center justify-center">
+               <Trophy className="w-10 h-10 text-[#004b8d] fill-current" />
+            </div>
+          </div>
+          <div className="flex flex-col">
+            <h1 className="text-[34px] font-black tracking-tight text-[#004b8d] leading-none mb-1">
+              UNITY EARNING
+            </h1>
+            <p className="text-[20px] font-black text-emerald-600 tracking-wider leading-none">
+              E-LEARNING PLATFORM
+            </p>
+            <div className="flex items-center gap-3 mt-3">
+               <span className="text-[11px] font-black uppercase text-slate-500 tracking-[0.4em]">LEARN</span>
+               <span className="text-[#004b8d] font-bold text-xs">|</span>
+               <span className="text-[11px] font-black uppercase text-slate-500 tracking-[0.4em]">GROW</span>
+               <span className="text-[#004b8d] font-bold text-xs">|</span>
+               <span className="text-[11px] font-black uppercase text-slate-500 tracking-[0.4em]">EARN</span>
+            </div>
+          </div>
+        </div>
+        {/* Dynamic Abstract Design Stripes */}
+        <div className="flex flex-col items-end gap-1.5 opacity-80 transform translate-x-4">
+           <div className="w-48 h-3 bg-[#004b8d] rounded-l-full" />
+           <div className="w-36 h-2.5 bg-emerald-500 rounded-l-full" />
+           <div className="w-24 h-2 bg-emerald-600 rounded-l-full" />
+        </div>
+      </div>
+
+      {/* 2. Main Title Banner */}
+      <div className="bg-[#004b8d] py-4 text-center shadow-md relative z-10">
+        <h2 className="text-2xl font-black text-white tracking-[0.1em] uppercase">
+          TEAM LEADER & TEAM TRAINER RANKING
+        </h2>
+      </div>
+
+      {/* 3. Main Content Area */}
+      <div className="flex-1 px-8 py-8 flex flex-col gap-8 bg-[#fdfdfd]">
+        
+        {/* STL Section */}
+        {showSeniorLeaders && (
+          <div className="flex flex-col animate-in fade-in duration-500">
+            <div className="flex items-center gap-4 mb-6">
+              <div className="flex-1 h-0.5 bg-emerald-600/30" />
+              <div className="bg-emerald-700 px-10 py-1.5 rounded-lg shadow-sm border border-emerald-600">
+                <h3 className="text-lg font-black text-white uppercase tracking-[0.15em]">
+                  SENIOR TEAM LEADER
+                </h3>
+              </div>
+              <div className="flex-1 h-0.5 bg-emerald-600/30" />
+            </div>
+
+            <div className="grid grid-cols-3 gap-4 px-4">
+              {seniorLeaders.length === 0 ? (
+                <div className="col-span-3 py-6 text-center text-slate-400 font-bold italic text-sm bg-slate-50 rounded-xl border-2 border-dashed border-slate-200">
+                  No Senior Team Leaders added yet.
+                </div>
+              ) : (
+                seniorLeaders.slice(0, 3).map((stl, idx) => (
+                  <div key={stl.id} className="flex flex-col items-center text-center">
+                    <div className="relative mb-3">
+                       <div className="w-16 h-16 rounded-full border-[5px] border-emerald-600 flex items-center justify-center bg-white shadow-lg ring-4 ring-emerald-50">
+                          <span className="text-2xl font-black text-emerald-800">{idx + 1}</span>
+                       </div>
+                    </div>
+                    <p className="text-base font-black text-[#004b8d] uppercase leading-tight max-w-[200px] truncate">
+                      {stl.name}
+                    </p>
+                    <div className="mt-2 bg-emerald-700 text-white px-5 py-1.5 rounded-full text-xs font-black shadow-md border border-emerald-500 ring-2 ring-emerald-50">
+                      {stl.convert} Convert
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* TL & TT Dual Tables */}
+        <div className="flex gap-6 items-start">
+          
+          {/* Left Column: Team Leader */}
+          <div className="w-[38%] flex flex-col shadow-sm rounded-lg overflow-hidden border border-slate-200">
+            <div className="bg-[#004b8d] px-4 py-2.5 flex items-center justify-between border-b border-[#003a6e]">
+              <div className="flex items-center gap-2 text-white">
+                <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center">
+                  <Users className="w-3.5 h-3.5 fill-current" />
+                </div>
+                <span className="text-base font-black uppercase tracking-tight">TEAM LEADER</span>
+              </div>
+              <span className="text-[9px] font-black text-blue-100 uppercase opacity-80">Total Convert</span>
+            </div>
+            
+            <table className="w-full border-collapse bg-white">
+              <thead>
+                <tr className="bg-blue-50 text-[9px] font-black uppercase text-[#004b8d] border-b border-slate-200">
+                  <th className="py-2 border-r border-slate-200 w-8 text-center">SL</th>
+                  <th className="py-2 border-r border-slate-200 px-3 text-left">Name</th>
+                  <th className="py-2 text-center w-20">Total Convert</th>
+                </tr>
+              </thead>
+              <tbody>
+                {leaders.slice(0, 16).map((l, idx) => (
+                  <tr key={l.id} className="text-[11px] font-bold text-slate-800 border-b border-slate-100 hover:bg-blue-50/30">
+                    <td className="py-1.5 border-r border-slate-100 text-center font-black text-slate-400">{idx + 1}</td>
+                    <td className="py-1.5 border-r border-slate-100 px-3 truncate">{l.name}</td>
+                    <td className="py-1.5 text-center font-black text-[#004b8d]">{l.convert}</td>
+                  </tr>
+                ))}
+                {/* Empty rows filler */}
+                {Array.from({ length: Math.max(0, 16 - leaders.length) }).map((_, i) => (
+                  <tr key={`empty-tl-${i}`} className="border-b border-slate-50 h-[30px]">
+                    <td className="border-r border-slate-50"></td>
+                    <td className="border-r border-slate-50"></td>
+                    <td></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Right Column: Team Trainer (Split) */}
+          <div className="flex-1 flex flex-col shadow-sm rounded-lg overflow-hidden border border-slate-200">
+             <div className="bg-emerald-700 px-4 py-2.5 flex items-center justify-between border-b border-emerald-800">
+                <div className="flex items-center gap-2 text-white">
+                  <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center">
+                    <Users className="w-3.5 h-3.5 fill-current" />
+                  </div>
+                  <span className="text-base font-black uppercase tracking-tight">TEAM TRAINER</span>
+                </div>
+                <span className="text-[9px] font-black text-emerald-100 uppercase opacity-80">Total Convert</span>
+             </div>
+
+             <div className="flex bg-white">
+                {/* TT Sub Column 1 (1-14) */}
+                <div className="flex-1 border-r border-slate-200">
+                   <table className="w-full border-collapse">
+                      <thead>
+                        <tr className="bg-emerald-50 text-[9px] font-black uppercase text-emerald-900 border-b border-slate-200">
+                          <th className="py-2 border-r border-slate-200 w-8 text-center">SL</th>
+                          <th className="py-2 border-r border-slate-200 px-3 text-left">Name</th>
+                          <th className="py-2 text-center w-16">Total Convert</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {trainers.slice(0, 14).map((t, idx) => (
+                          <tr key={t.id} className="text-[11px] font-bold text-slate-800 border-b border-slate-100 hover:bg-emerald-50/30">
+                            <td className="py-1.5 border-r border-slate-100 text-center font-black text-slate-400">{idx + 1}</td>
+                            <td className="py-1.5 border-r border-slate-100 px-3 truncate">{t.name}</td>
+                            <td className="py-1.5 text-center font-black text-emerald-700">{t.convert}</td>
+                          </tr>
+                        ))}
+                        {Array.from({ length: Math.max(0, 14 - trainers.length) }).map((_, i) => (
+                          <tr key={`empty-tt1-${i}`} className="border-b border-slate-50 h-[30px]">
+                            <td className="border-r border-slate-50"></td>
+                            <td className="border-r border-slate-50"></td>
+                            <td></td>
+                          </tr>
+                        ))}
+                      </tbody>
+                   </table>
+                </div>
+                {/* TT Sub Column 2 (15-28) */}
+                <div className="flex-1">
+                   <table className="w-full border-collapse">
+                      <thead>
+                        <tr className="bg-emerald-50 text-[9px] font-black uppercase text-emerald-900 border-b border-slate-200">
+                          <th className="py-2 border-r border-slate-200 w-8 text-center">SL</th>
+                          <th className="py-2 border-r border-slate-200 px-3 text-left">Name</th>
+                          <th className="py-2 text-center w-16">Total Convert</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {trainers.slice(14, 28).map((t, idx) => (
+                          <tr key={t.id} className="text-[11px] font-bold text-slate-800 border-b border-slate-100 hover:bg-emerald-50/30">
+                            <td className="py-1.5 border-r border-slate-100 text-center font-black text-slate-400">{idx + 15}</td>
+                            <td className="py-1.5 border-r border-slate-100 px-3 truncate">{t.name}</td>
+                            <td className="py-1.5 text-center font-black text-emerald-700">{t.convert}</td>
+                          </tr>
+                        ))}
+                        {Array.from({ length: Math.max(0, 14 - (trainers.length > 14 ? trainers.length - 14 : 0)) }).map((_, i) => (
+                          <tr key={`empty-tt2-${i}`} className="border-b border-slate-50 h-[30px]">
+                            <td className="border-r border-slate-50"></td>
+                            <td className="border-r border-slate-50"></td>
+                            <td></td>
+                          </tr>
+                        ))}
+                      </tbody>
+                   </table>
+                </div>
+             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 4. Footer Area */}
+      <div className="px-12 py-10 flex flex-col items-center bg-[#fdfdfd]">
+         <div className="w-full h-px bg-slate-200 mb-8" />
+         
+         <div className="w-full flex items-end justify-between mb-8">
+            <div className="flex flex-col items-center mx-auto">
+               <p className="text-sm font-bold text-slate-600 mb-6 italic">Prepared & Verified by Admin</p>
+               
+               {/* Professional Signature SVG */}
+               <div className="h-12 flex items-center justify-center select-none opacity-90">
+                 <svg className="w-48 h-12" viewBox="0 0 220 50" fill="none">
+                    <path d="M15 38C12 32 15 14 22 10C27 6 30 16 31 26C32 35 29 44 24 46C20 48 18 41 22 31C28 16 38 11 43 13C47 15 41 26 40 31C44 24 50 18 55 22" stroke="#1e293b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                    <path d="M12 40C45 38 100 42 150 39C175 37 205 35 212 37" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" />
+                 </svg>
+               </div>
+               
+               <div className="w-56 h-[1.5px] bg-[#004b8d]/40 mt-1 mb-1.5" />
+               <p className="text-lg font-black text-[#004b8d] uppercase tracking-wider leading-none">
+                 {metadata.adminName || 'Jihadul Islam'}
+               </p>
+               <p className="text-[10px] font-black text-slate-500 uppercase mt-1">
+                 Admin, Unity Earning E-Learning Platform
+               </p>
+            </div>
+         </div>
+
+         <div className="flex items-center gap-5 w-full opacity-60">
+            <div className="flex-1 h-[0.5px] bg-slate-400" />
+            <p className="text-[9px] font-black text-blue-900 tracking-[0.5em] uppercase whitespace-nowrap">
+              TOGETHER WE BUILD A BETTER TOMORROW
+            </p>
+            <div className="flex-1 h-[0.5px] bg-slate-400" />
+         </div>
+      </div>
+    </div>
+  );
+};
+
 export const RankingSection: React.FC<RankingSectionProps> = ({
   teamLeaders,
   teamTrainers,
@@ -655,11 +926,13 @@ export const RankingSection: React.FC<RankingSectionProps> = ({
   // 3. Custom / Overridden ranking lists
   const [customLeaders, setCustomLeaders] = useState<RankingMemberItem[] | null>(null);
   const [customTrainers, setCustomTrainers] = useState<RankingMemberItem[] | null>(null);
+  const [seniorLeaders, setSeniorLeaders] = useState<RankingMemberItem[]>([]);
+  const [showSeniorLeaders, setShowSeniorLeaders] = useState(false);
 
   // 4. Modals & Raw Import Drawer state
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<RankingMemberItem | null>(null);
-  const [itemToDelete, setItemToDelete] = useState<{ id: string; role: 'leader' | 'trainer'; name: string } | null>(null);
+  const [itemToDelete, setItemToDelete] = useState<{ id: string; role: 'leader' | 'trainer' | 'senior'; name: string } | null>(null);
   const [isRawPasteOpen, setIsRawPasteOpen] = useState(false);
   const [rawPasteText, setRawPasteText] = useState('');
   const [rawPasteRole, setRawPasteRole] = useState<'leader' | 'trainer'>('leader');
@@ -695,8 +968,8 @@ export const RankingSection: React.FC<RankingSectionProps> = ({
           role: 'leader' as const,
         };
       })
-      // Filter out zero converts as explicitly requested: "যার কনভার্ট জিরো থাকবে তাকে লিস্ট থেকে বাদ দিবা"
-      .filter((item) => item.convert > 0 && item.name.trim() !== '')
+      // Keep all items including those with zero converts as per latest request and screenshot
+      .filter((item) => item.name.trim() !== '')
       .sort((a, b) => b.convert - a.convert);
   }, [teamLeaders, customLeaders]);
 
@@ -720,17 +993,19 @@ export const RankingSection: React.FC<RankingSectionProps> = ({
           role: 'trainer' as const,
         };
       })
-      // Filter out zero converts as explicitly requested
-      .filter((item) => item.convert > 0 && item.name.trim() !== '')
+      // Keep all items including those with zero converts
+      .filter((item) => item.name.trim() !== '')
       .sort((a, b) => b.convert - a.convert);
   }, [teamTrainers, customTrainers]);
 
   // Combined both items
   const displayBothItems = useMemo(() => {
-    return [...effectiveLeaders, ...effectiveTrainers].sort(
-      (a, b) => b.convert - a.convert
-    );
-  }, [effectiveLeaders, effectiveTrainers]);
+    return [...seniorLeaders, ...effectiveLeaders, ...effectiveTrainers].sort((a, b) => {
+      // Keep seniors at top if they are in the list, or just sort by convert?
+      // In the management table, maybe we just want to see everyone.
+      return b.convert - a.convert;
+    });
+  }, [seniorLeaders, effectiveLeaders, effectiveTrainers]);
 
   // Active items based on current tab
   const displayItems = useMemo(() => {
@@ -767,11 +1042,11 @@ export const RankingSection: React.FC<RankingSectionProps> = ({
       convert = 0;
     }
 
-    const role = (formData.get('role') as 'leader' | 'trainer') || (activeTab === 'trainer' ? 'trainer' : 'leader');
+    const role = (formData.get('role') as 'leader' | 'trainer' | 'senior') || (activeTab === 'trainer' ? 'trainer' : 'leader');
 
     // Auto-calculate convert if left empty/zero and balance > 0
     if (convertVal === null || convertVal === '') {
-      if (balance > 0) {
+      if (balance > 0 && role !== 'senior') {
         convert = Math.round(balance / (role === 'leader' ? 60 : 50));
       }
     }
@@ -786,7 +1061,15 @@ export const RankingSection: React.FC<RankingSectionProps> = ({
       isCustom: true,
     };
 
-    if (role === 'leader') {
+    if (role === 'senior') {
+      if (seniorLeaders.length >= 3) {
+        showToast('সর্বোচ্চ ৩ জন সিনিয়র টিম লিডার যুক্ত করা যাবে');
+        return;
+      }
+      setSeniorLeaders([...seniorLeaders, newItem]);
+      setShowSeniorLeaders(true);
+      showToast(`সিনিয়র টিম লিডার "${name}" যুক্ত হয়েছে`);
+    } else if (role === 'leader') {
       const base = customLeaders !== null ? customLeaders : effectiveLeaders;
       const updated = [...base, newItem].sort((a, b) => b.convert - a.convert);
       setCustomLeaders(updated);
@@ -816,40 +1099,77 @@ export const RankingSection: React.FC<RankingSectionProps> = ({
     }
     const balance = Number(formData.get('balance')) || 0;
 
+    const role = (formData.get('role') as 'leader' | 'trainer' | 'senior') || editingItem.role;
+
     const updatedItem: RankingMemberItem = {
       ...editingItem,
       name,
       emailOrPhone,
       balance,
       convert,
+      role,
     };
 
-    if (editingItem.role === 'leader') {
-      const base = customLeaders !== null ? customLeaders : effectiveLeaders;
-      const list = base.map((i) => (i.id === editingItem.id ? updatedItem : i));
-      const sorted = list.sort((a, b) => b.convert - a.convert);
-      setCustomLeaders(sorted);
+    if (role !== editingItem.role) {
+      // 1. Remove from old role list
+      if (editingItem.role === 'leader') {
+        const base = customLeaders !== null ? customLeaders : effectiveLeaders;
+        setCustomLeaders(base.filter(i => i.id !== editingItem.id));
+      } else if (editingItem.role === 'trainer') {
+        const base = customTrainers !== null ? customTrainers : effectiveTrainers;
+        setCustomTrainers(base.filter(i => i.id !== editingItem.id));
+      } else if (editingItem.role === 'senior') {
+        setSeniorLeaders(prev => prev.filter(i => i.id !== editingItem.id));
+      }
+
+      // 2. Add to new role list
+      if (role === 'leader') {
+        const base = customLeaders !== null ? customLeaders : effectiveLeaders;
+        setCustomLeaders([...base.filter(i => i.id !== editingItem.id), updatedItem].sort((a, b) => b.convert - a.convert));
+      } else if (role === 'trainer') {
+        const base = customTrainers !== null ? customTrainers : effectiveTrainers;
+        setCustomTrainers([...base.filter(i => i.id !== editingItem.id), updatedItem].sort((a, b) => b.convert - a.convert));
+      } else if (role === 'senior') {
+        if (seniorLeaders.length >= 3 && editingItem.role !== 'senior') {
+          showToast('সর্বোচ্চ ৩ জন সিনিয়র টিম লিডার যুক্ত করা যাবে');
+          return;
+        }
+        setSeniorLeaders(prev => [...prev, updatedItem]);
+      }
     } else {
-      const base = customTrainers !== null ? customTrainers : effectiveTrainers;
-      const list = base.map((i) => (i.id === editingItem.id ? updatedItem : i));
-      const sorted = list.sort((a, b) => b.convert - a.convert);
-      setCustomTrainers(sorted);
+      // Just update in place
+      if (role === 'leader') {
+        const base = customLeaders !== null ? customLeaders : effectiveLeaders;
+        const updated = base.map((i) => (i.id === editingItem.id ? updatedItem : i)).sort((a, b) => b.convert - a.convert);
+        setCustomLeaders(updated);
+      } else if (role === 'trainer') {
+        const base = customTrainers !== null ? customTrainers : effectiveTrainers;
+        const updated = base.map((i) => (i.id === editingItem.id ? updatedItem : i)).sort((a, b) => b.convert - a.convert);
+        setCustomTrainers(updated);
+      } else if (role === 'senior') {
+        setSeniorLeaders(prev => prev.map(s => s.id === editingItem.id ? updatedItem : s));
+      }
     }
 
     setEditingItem(null);
-    showToast(`"${name}" এর কনভার্ট (${convert}) সফলভাবে সেভ করা হয়েছে!`);
+    showToast(`"${name}" এর তথ্য আপডেট করা হয়েছে`);
   };
 
+
+
   // Delete item from ranking (reliable, no blocked native confirm dialog)
-  const handleDeleteItem = (id: string, role: 'leader' | 'trainer', name: string) => {
+  const handleDeleteItem = (id: string, role: 'leader' | 'trainer' | 'senior', name: string) => {
     if (role === 'leader') {
       const base = customLeaders !== null ? customLeaders : effectiveLeaders;
       const updated = base.filter((i) => i.id !== id);
       setCustomLeaders(updated);
-    } else {
+    } else if (role === 'trainer') {
       const base = customTrainers !== null ? customTrainers : effectiveTrainers;
       const updated = base.filter((i) => i.id !== id);
       setCustomTrainers(updated);
+    } else if (role === 'senior') {
+      const updated = seniorLeaders.filter((i) => i.id !== id);
+      setSeniorLeaders(updated);
     }
     showToast(`"${name}" কে র‍্যাঙ্কিং তালিকা থেকে বাদ দেওয়া হয়েছে`);
   };
@@ -1069,6 +1389,53 @@ export const RankingSection: React.FC<RankingSectionProps> = ({
                 {effectiveLeaders.length + effectiveTrainers.length}
               </span>
             </button>
+          </div>
+
+          {/* Senior Team Leader Management UI */}
+          <div className="flex flex-col lg:flex-row items-start lg:items-center bg-slate-800/50 p-2 rounded-xl border border-slate-700/50 gap-3">
+             <div className="flex items-center gap-2">
+                <Crown className="w-4 h-4 text-emerald-400" />
+                <span className="text-xs font-bold text-slate-200">সিনিয়র টিম লিডার:</span>
+                <button
+                  onClick={() => setShowSeniorLeaders(!showSeniorLeaders)}
+                  className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2 ${showSeniorLeaders ? 'bg-emerald-600' : 'bg-slate-700'}`}
+                >
+                  <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${showSeniorLeaders ? 'translate-x-4' : 'translate-x-0'}`} />
+                </button>
+             </div>
+
+             {showSeniorLeaders && (
+                <div className="flex items-center gap-2">
+                   <div className="flex -space-x-2">
+                      {seniorLeaders.map((stl, i) => (
+                        <div key={stl.id} className="w-8 h-8 rounded-full bg-emerald-700 border-2 border-slate-900 flex items-center justify-center text-[10px] font-black text-white relative group cursor-default" title={stl.name}>
+                           {i + 1}
+                           <button 
+                             onClick={() => handleDeleteItem(stl.id, 'senior', stl.name)}
+                             className="absolute -top-1 -right-1 bg-rose-600 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                           >
+                             <X className="w-2.5 h-2.5" />
+                           </button>
+                        </div>
+                      ))}
+                      {seniorLeaders.length < 3 && (
+                        <button
+                          onClick={() => {
+                            setEditingItem(null);
+                            setIsAddModalOpen(true);
+                          }}
+                          className="w-8 h-8 rounded-full bg-slate-700 border-2 border-slate-900 border-dashed flex items-center justify-center text-slate-400 hover:text-white hover:bg-emerald-600 transition-colors"
+                          title="Add Senior Team Leader"
+                        >
+                          <Plus className="w-4 h-4" />
+                        </button>
+                      )}
+                   </div>
+                   <span className="text-[10px] font-bold text-emerald-400">
+                     ({seniorLeaders.length}/৩ জন)
+                   </span>
+                </div>
+             )}
           </div>
 
           {/* Action buttons: Add Member, Paste Raw Data, Sync */}
@@ -1353,19 +1720,36 @@ export const RankingSection: React.FC<RankingSectionProps> = ({
       {/* Main Ranking Layout: Center the Card Poster for Screen View */}
       <div className="flex flex-col items-center justify-center p-2 sm:p-4">
         {/* On-screen view poster */}
-        <RankingCardPoster
-          id="ranking-poster-view"
-          items={displayItems}
-          title={getMainTitleText()}
-          subTitle={getSubTitleText()}
-          periodMonth={metadata.periodMonth}
-          adminName={metadata.adminName}
-          adminRole={metadata.adminRole}
-          currentDateTime={currentDateTime}
-          frameClasses={getContainerFrameClasses()}
-          frameStyle={getContainerFrameStyle()}
-          showRoleBadge={activeTab === 'both'}
-        />
+        {activeTab === 'both' ? (
+          <PremiumCombinedPoster
+            id="ranking-poster-view"
+            seniorLeaders={seniorLeaders}
+            leaders={effectiveLeaders}
+            trainers={effectiveTrainers}
+            showSeniorLeaders={showSeniorLeaders}
+            metadata={metadata}
+            currentDateTime={currentDateTime}
+            frameStyle={{
+              transform: 'scale(0.55)', // Scaled down for preview
+              transformOrigin: 'top center',
+              marginBottom: '-500px' // Compensate for scale
+            }}
+          />
+        ) : (
+          <RankingCardPoster
+            id="ranking-poster-view"
+            items={displayItems}
+            title={getMainTitleText()}
+            subTitle={getSubTitleText()}
+            periodMonth={metadata.periodMonth}
+            adminName={metadata.adminName}
+            adminRole={metadata.adminRole}
+            currentDateTime={currentDateTime}
+            frameClasses={getContainerFrameClasses()}
+            frameStyle={getContainerFrameStyle()}
+            showRoleBadge={activeTab === 'both'}
+          />
+        )}
       </div>
 
       {/* =========================================================================
@@ -1413,18 +1797,15 @@ export const RankingSection: React.FC<RankingSectionProps> = ({
           showRoleBadge={false}
         />
 
-        {/* 3. Both Together Combined Poster Export */}
-        <RankingCardPoster
+        {/* 3. Both Together Combined Poster Export (Premium Design) */}
+        <PremiumCombinedPoster
           id="ranking-poster-export-both"
-          items={displayBothItems}
-          title="TEAM LEADER & TEAM TRAINER RANKING"
-          subTitle="Combined Performance Leaderboard"
-          periodMonth={metadata.periodMonth}
-          adminName={metadata.adminName}
-          adminRole={metadata.adminRole}
+          seniorLeaders={seniorLeaders}
+          leaders={effectiveLeaders}
+          trainers={effectiveTrainers}
+          showSeniorLeaders={showSeniorLeaders}
+          metadata={metadata}
           currentDateTime={currentDateTime}
-          frameStyle={getExportFrameStyle()}
-          showRoleBadge={true}
         />
 
         {/* 4. Active Tab alias for default download calls */}
@@ -1491,10 +1872,12 @@ export const RankingSection: React.FC<RankingSectionProps> = ({
                       className={`text-[10px] px-2 py-0.5 rounded font-extrabold uppercase ${
                         item.role === 'leader'
                           ? 'bg-blue-900/60 text-blue-300 border border-blue-700/50'
+                          : item.role === 'senior'
+                          ? 'bg-purple-900/60 text-purple-300 border border-purple-700/50'
                           : 'bg-emerald-900/60 text-emerald-300 border border-emerald-700/50'
                       }`}
                     >
-                      {item.role === 'leader' ? 'টিম লিডার' : 'টিম ট্রেইনার'}
+                      {item.role === 'leader' ? 'টিম লিডার' : item.role === 'senior' ? 'সিনিয়র টিম লিডার' : 'টিম ট্রেইনার'}
                     </span>
                   </td>
                   <td className="py-2.5 px-3 font-mono font-black text-emerald-400 text-sm">
@@ -1510,7 +1893,7 @@ export const RankingSection: React.FC<RankingSectionProps> = ({
                         <Edit2 className="w-3.5 h-3.5" />
                       </button>
                       <button
-                        onClick={() => setItemToDelete({ id: item.id, role: item.role, name: item.name })}
+                        onClick={() => setItemToDelete({ id: item.id, role: item.role as 'leader' | 'trainer' | 'senior', name: item.name })}
                         className="cursor-pointer p-1.5 rounded hover:bg-rose-950/40 text-rose-400 hover:text-rose-300 transition-colors"
                         title="Remove from ranking"
                       >
@@ -1570,11 +1953,12 @@ export const RankingSection: React.FC<RankingSectionProps> = ({
                 <label className="block text-slate-300 mb-1">পদবী / রোল *</label>
                 <select
                   name="role"
-                  defaultValue={activeTab === 'trainer' ? 'trainer' : 'leader'}
+                  defaultValue={editingItem?.role || (activeTab === 'trainer' ? 'trainer' : 'leader')}
                   className="w-full p-2.5 rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-hidden focus:border-amber-400"
                 >
                   <option value="leader">👑 টিম লিডার</option>
                   <option value="trainer">⚡ টিম ট্রেইনার</option>
+                  <option value="senior">💎 সিনিয়র টিম লিডার</option>
                 </select>
               </div>
 
@@ -1655,6 +2039,19 @@ export const RankingSection: React.FC<RankingSectionProps> = ({
                   defaultValue={editingItem.emailOrPhone || ''}
                   className="w-full p-2.5 rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-hidden focus:border-sky-400"
                 />
+              </div>
+
+              <div>
+                <label className="block text-slate-300 mb-1">পদবী / রোল *</label>
+                <select
+                  name="role"
+                  defaultValue={editingItem.role}
+                  className="w-full p-2.5 rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-hidden focus:border-sky-400"
+                >
+                  <option value="leader">👑 টিম লিডার</option>
+                  <option value="trainer">⚡ টিম ট্রেইনার</option>
+                  <option value="senior">💎 সিনিয়র টিম লিডার</option>
+                </select>
               </div>
 
               <div>
@@ -1743,7 +2140,7 @@ export const RankingSection: React.FC<RankingSectionProps> = ({
             <div className="p-3 rounded-lg bg-slate-800/80 border border-slate-700/60 text-xs">
               <div className="font-bold text-amber-300 text-sm">{itemToDelete.name}</div>
               <div className="text-[11px] text-slate-400 mt-0.5">
-                {itemToDelete.role === 'leader' ? '👑 টিম লিডার' : '⚡ টিম ট্রেইনার'}
+                {itemToDelete.role === 'leader' ? '👑 টিম লিডার' : itemToDelete.role === 'senior' ? '🌟 সিনিয়র টিম লিডার' : '⚡ টিম ট্রেইনার'}
               </div>
             </div>
 

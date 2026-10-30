@@ -970,8 +970,8 @@ export const RankingSection: React.FC<RankingSectionProps> = ({
       })
       // Keep only items with convert > 0 and a valid name
       .filter((item) => item.name.trim() !== '' && item.convert > 0)
-      // Sort by (Convert + Balance) descending
-      .sort((a, b) => (Number(b.convert) + Number(b.balance)) - (Number(a.convert) + Number(a.balance)));
+      // Sort by Convert descending
+      .sort((a, b) => Number(b.convert) - Number(a.convert));
   }, [teamLeaders, customLeaders]);
 
   // Compute Base Trainer list from props if not custom
@@ -996,15 +996,15 @@ export const RankingSection: React.FC<RankingSectionProps> = ({
       })
       // Keep only items with convert > 0
       .filter((item) => item.name.trim() !== '' && item.convert > 0)
-      // Sort by (Convert + Balance) descending
-      .sort((a, b) => (Number(b.convert) + Number(b.balance)) - (Number(a.convert) + Number(a.balance)));
+      // Sort by Convert descending
+      .sort((a, b) => Number(b.convert) - Number(a.convert));
   }, [teamTrainers, customTrainers]);
 
   // Combined both items
   const displayBothItems = useMemo(() => {
     return [...seniorLeaders, ...effectiveLeaders, ...effectiveTrainers].sort((a, b) => {
-      // Sort by (Convert + Balance) descending
-      return (Number(b.convert) + Number(b.balance)) - (Number(a.convert) + Number(a.balance));
+      // Sort by Convert descending
+      return Number(b.convert) - Number(a.convert);
     });
   }, [seniorLeaders, effectiveLeaders, effectiveTrainers]);
 
@@ -1074,14 +1074,14 @@ export const RankingSection: React.FC<RankingSectionProps> = ({
       const base = customLeaders !== null ? customLeaders : effectiveLeaders;
       const updated = [...base, newItem]
         .filter(item => item.convert > 0)
-        .sort((a, b) => (Number(b.convert) + Number(b.balance)) - (Number(a.convert) + Number(a.balance)));
+        .sort((a, b) => Number(b.convert) - Number(a.convert));
       setCustomLeaders(updated);
       showToast(`টিম লিডার "${name}" (${convert} কনভার্ট) যুক্ত হয়েছে!`);
     } else {
       const base = customTrainers !== null ? customTrainers : effectiveTrainers;
       const updated = [...base, newItem]
         .filter(item => item.convert > 0)
-        .sort((a, b) => (Number(b.convert) + Number(b.balance)) - (Number(a.convert) + Number(a.balance)));
+        .sort((a, b) => Number(b.convert) - Number(a.convert));
       setCustomTrainers(updated);
       showToast(`টিম ট্রেইনার "${name}" (${convert} কনভার্ট) যুক্ত হয়েছে!`);
     }
@@ -1202,7 +1202,7 @@ export const RankingSection: React.FC<RankingSectionProps> = ({
         role: rawPasteRole,
         isCustom: true,
       }))
-      .sort((a, b) => (Number(b.convert) + Number(b.balance)) - (Number(a.convert) + Number(a.balance)));
+      .sort((a, b) => Number(b.convert) - Number(a.convert));
 
     if (rawPasteRole === 'leader') {
       setCustomLeaders(newRankingItems);

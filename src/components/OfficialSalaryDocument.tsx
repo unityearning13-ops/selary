@@ -38,12 +38,12 @@ export const OfficialSalaryDocument: React.FC<OfficialSalaryDocumentProps> = ({
   generatedTime,
   sectionFilter = 'all',
 }) => {
-  // 1. Filter and Sort Team Leaders
+  // 1. Filter and Sort Team Leaders (Strict serial by Convert Descending)
   const processedLeaders = React.useMemo(() => {
     return teamLeaders
       .filter((emp) => {
-        const balance = getEmployeeBalance(emp, RATE_TEAM_LEADER);
-        return balance > 0 && (emp.name?.trim() || '');
+        const conv = parseNumber(emp.convert);
+        return conv > 0 && emp.name && emp.name.trim() !== '';
       })
       .sort((a, b) => {
         const convA = parseNumber(a.convert);
@@ -52,12 +52,12 @@ export const OfficialSalaryDocument: React.FC<OfficialSalaryDocumentProps> = ({
       });
   }, [teamLeaders]);
 
-  // 2. Filter and Sort Team Trainers
+  // 2. Filter and Sort Team Trainers (Strict serial by Convert Descending)
   const processedTrainers = React.useMemo(() => {
     return teamTrainers
       .filter((emp) => {
-        const balance = getEmployeeBalance(emp, RATE_TEAM_TRAINER);
-        return balance > 0 && (emp.name?.trim() || '');
+        const conv = parseNumber(emp.convert);
+        return conv > 0 && emp.name && emp.name.trim() !== '';
       })
       .sort((a, b) => {
         const convA = parseNumber(a.convert);

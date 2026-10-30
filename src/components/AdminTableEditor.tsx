@@ -172,6 +172,13 @@ export const AdminTableEditor: React.FC<AdminTableEditorProps> = ({
       emp.name.toLowerCase().includes(searchTerm.toLowerCase().trim())
     );
 
+  // Sorted list for display and rank numbering
+  const sortedRows = [...filteredIndices].sort((a, b) => {
+    const convA = parseNumber(a.emp.convert);
+    const convB = parseNumber(b.emp.convert);
+    return convB - convA;
+  });
+
   return (
     <div className="bg-white rounded-xl shadow-md border-2 border-slate-400 overflow-hidden mb-8">
       {/* Top Banner with Excel Workbook Feel */}
@@ -330,7 +337,7 @@ export const AdminTableEditor: React.FC<AdminTableEditorProps> = ({
             </tr>
           </thead>
           <tbody>
-            {filteredIndices.length === 0 ? (
+            {sortedRows.length === 0 ? (
               <tr>
                 <td colSpan={10} className="py-12 text-center text-slate-500 bg-slate-50">
                   {searchTerm ? (
@@ -368,7 +375,7 @@ export const AdminTableEditor: React.FC<AdminTableEditorProps> = ({
                 </td>
               </tr>
             ) : (
-              filteredIndices.map(({ emp, index }) => {
+              sortedRows.map(({ emp, index }, displayIdx) => {
                 const autoBalance = parseNumber(emp.convert) * effectiveRate;
                 const totalAmount = getEmployeeTotalAmount(emp, effectiveRate);
 
@@ -377,9 +384,9 @@ export const AdminTableEditor: React.FC<AdminTableEditorProps> = ({
                     key={emp.id || `emp-${index}`}
                     className="hover:bg-slate-100/70 transition-colors"
                   >
-                    {/* NO - Cell Box */}
+                    {/* NO - Cell Box (Actual Rank) */}
                     <td className="py-2 px-2 text-center border border-slate-400 font-bold text-slate-700 bg-[#f1f5f9]">
-                      {index + 1}
+                      {displayIdx + 1}
                     </td>
 
                     {/* NAME - Cell Box with Input */}

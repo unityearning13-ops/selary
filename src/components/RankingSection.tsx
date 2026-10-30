@@ -969,9 +969,15 @@ export const RankingSection: React.FC<RankingSectionProps> = ({
         };
       })
       // Keep only items with convert > 0 and a valid name
-      .filter((item) => item.name.trim() !== '' && item.convert > 0)
-      // Sort by Convert descending
-      .sort((a, b) => Number(b.convert) - Number(a.convert));
+      .filter((item) => item.name.trim() !== '' && Number(item.convert) > 0)
+      // Sort by Convert plus Balance descending
+      .sort((a, b) => {
+        const convA = Number(a.convert) || 0;
+        const convB = Number(b.convert) || 0;
+        const balA = Number(a.balance) || 0;
+        const balB = Number(b.balance) || 0;
+        return (convB + balB) - (convA + balA);
+      });
   }, [teamLeaders, customLeaders]);
 
   // Compute Base Trainer list from props if not custom
@@ -995,16 +1001,26 @@ export const RankingSection: React.FC<RankingSectionProps> = ({
         };
       })
       // Keep only items with convert > 0
-      .filter((item) => item.name.trim() !== '' && item.convert > 0)
-      // Sort by Convert descending
-      .sort((a, b) => Number(b.convert) - Number(a.convert));
+      .filter((item) => item.name.trim() !== '' && Number(item.convert) > 0)
+      // Sort by Convert plus Balance descending
+      .sort((a, b) => {
+        const convA = Number(a.convert) || 0;
+        const convB = Number(b.convert) || 0;
+        const balA = Number(a.balance) || 0;
+        const balB = Number(b.balance) || 0;
+        return (convB + balB) - (convA + balA);
+      });
   }, [teamTrainers, customTrainers]);
 
   // Combined both items
   const displayBothItems = useMemo(() => {
     return [...seniorLeaders, ...effectiveLeaders, ...effectiveTrainers].sort((a, b) => {
-      // Sort by Convert descending
-      return Number(b.convert) - Number(a.convert);
+      // Sort by Convert plus Balance descending
+      const convA = Number(a.convert) || 0;
+      const convB = Number(b.convert) || 0;
+      const balA = Number(a.balance) || 0;
+      const balB = Number(b.balance) || 0;
+      return (convB + balB) - (convA + balA);
     });
   }, [seniorLeaders, effectiveLeaders, effectiveTrainers]);
 

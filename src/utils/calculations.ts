@@ -24,13 +24,69 @@ export function getEmployeeBalance(emp: Employee, rate: number): number {
 }
 
 /**
+ * Calculates incentive based on role, convert, and target rules:
+ * - If Target is set (> 0):
+ *   - Convert >= Target:
+ *     - Team Leader: 1000 BDT
+ *     - Team Trainer: 500 BDT
+ *   - Convert < Target:
+ *     - Convert * 10 BDT
+ * - If Target is not set (empty or 0):
+ *   - Convert * 10 BDT
+ * - If Convert <= 0:
+ *   - '' (empty)
+ */
+export function calculateAutoIncentive(
+  convert: number | string | undefined | null,
+  target: number | string | undefined | null,
+  role: 'leader' | 'trainer'
+): number | '' {
+  const conv = parseNumber(convert);
+  if (conv <= 0) return '';
+  const tgt = parseNumber(target);
+
+  if (tgt > 0) {
+    if (conv >= tgt) {
+      return role === 'leader' ? 1000 : 500;
+    } else {
+      return Math.round(conv * 10);
+    }
+  }
+
+  // If target is not set or 0: 10 BDT per convert
+  return Math.round(conv * 10);
+}
+
+/**
+ * Returns effective employee incentive, considering manual override or auto-calculation.
+ */
+export function getEmployeeIncentive(
+  emp: Employee,
+  role: 'leader' | 'trainer'
+): number {
+  if (emp.isIncentiveOverridden && emp.incentive !== '') {
+    return parseNumber(emp.incentive);
+  }
+  if (emp.incentive !== '' && emp.incentive !== undefined && emp.incentive !== null) {
+    return parseNumber(emp.incentive);
+  }
+  const auto = calculateAutoIncentive(emp.convert, emp.target, role);
+  return auto === '' ? 0 : auto;
+}
+
+/**
  * Calculates total amount for an employee:
  * TOTAL AMOUNT = BALANCE + BONUS + INCENTIVE - FINE
  */
-export function getEmployeeTotalAmount(emp: Employee, rate: number): number {
+export function getEmployeeTotalAmount(
+  emp: Employee,
+  rate: number,
+  role?: 'leader' | 'trainer'
+): number {
+  const effectiveRole = role || (rate === RATE_TEAM_LEADER ? 'leader' : 'trainer');
   const balance = getEmployeeBalance(emp, rate);
   const bonus = parseNumber(emp.bonus);
-  const incentive = parseNumber(emp.incentive);
+  const incentive = getEmployeeIncentive(emp, effectiveRole);
   const fine = parseNumber(emp.fine);
 
   return balance + bonus + incentive - fine;
@@ -39,16 +95,21 @@ export function getEmployeeTotalAmount(emp: Employee, rate: number): number {
 /**
  * Calculates section aggregate totals.
  */
-export function calculateSectionTotals(employees: Employee[], rate: number): SectionTotals {
+export function calculateSectionTotals(
+  employees: Employee[],
+  rate: number,
+  role?: 'leader' | 'trainer'
+): SectionTotals {
+  const effectiveRole = role || (rate === RATE_TEAM_LEADER ? 'leader' : 'trainer');
   return employees.reduce(
     (acc, emp) => {
       const conv = parseNumber(emp.convert);
       const balance = getEmployeeBalance(emp, rate);
       const target = parseNumber(emp.target);
       const bonus = parseNumber(emp.bonus);
-      const incentive = parseNumber(emp.incentive);
+      const incentive = getEmployeeIncentive(emp, effectiveRole);
       const fine = parseNumber(emp.fine);
-      const totalAmount = getEmployeeTotalAmount(emp, rate);
+      const totalAmount = getEmployeeTotalAmount(emp, rate, effectiveRole);
 
       return {
         count: acc.count + 1,

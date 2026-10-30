@@ -7,6 +7,7 @@ export interface Employee {
   target: number | '';
   bonus: number | '';
   incentive: number | '';
+  isIncentiveOverridden?: boolean;
   fine: number | '';
 }
 

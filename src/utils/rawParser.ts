@@ -206,15 +206,17 @@ export function parseRawPortalData(
 
   const activeEmployees: Employee[] = activeOnly.map((item, i) => {
     const isOverridden = Math.abs(item.convert * rate - item.balance) > 0.01;
+    const initialIncentive = item.convert > 0 ? Math.round(item.convert * 10) : '';
     return {
       id: `${role}-${Date.now()}-${i}-${Math.random().toString(36).substr(2, 4)}`,
       name: item.name.toUpperCase(),
       convert: item.convert,
       balance: item.balance,
       isBalanceOverridden: isOverridden,
-      target: role === 'leader' ? 40 : 20,
+      target: '',
       bonus: '',
-      incentive: '',
+      incentive: initialIncentive,
+      isIncentiveOverridden: false,
       fine: '',
     };
   });

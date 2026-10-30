@@ -4,6 +4,7 @@ import {
   RATE_TEAM_LEADER,
   RATE_TEAM_TRAINER,
   getEmployeeBalance,
+  getEmployeeIncentive,
   getEmployeeTotalAmount,
   formatBDT,
   parseNumber,
@@ -42,13 +43,17 @@ export const OfficialSalaryDocument: React.FC<OfficialSalaryDocumentProps> = ({
   const processedLeaders = React.useMemo(() => {
     return teamLeaders
       .filter((emp) => {
-        const conv = parseNumber(emp.convert);
-        return conv > 0 && emp.name && emp.name.trim() !== '';
+        const bal = getEmployeeBalance(emp, RATE_TEAM_LEADER);
+        return bal > 0 && emp.name && emp.name.trim() !== '';
       })
       .sort((a, b) => {
         const convA = parseNumber(a.convert);
         const convB = parseNumber(b.convert);
-        return convB - convA;
+        const balA = getEmployeeBalance(a, RATE_TEAM_LEADER);
+        const balB = getEmployeeBalance(b, RATE_TEAM_LEADER);
+        
+        // Literal interpretation: "Convert plus Balance"
+        return (convB + balB) - (convA + balA);
       });
   }, [teamLeaders]);
 
@@ -56,20 +61,24 @@ export const OfficialSalaryDocument: React.FC<OfficialSalaryDocumentProps> = ({
   const processedTrainers = React.useMemo(() => {
     return teamTrainers
       .filter((emp) => {
-        const conv = parseNumber(emp.convert);
-        return conv > 0 && emp.name && emp.name.trim() !== '';
+        const bal = getEmployeeBalance(emp, RATE_TEAM_TRAINER);
+        return bal > 0 && emp.name && emp.name.trim() !== '';
       })
       .sort((a, b) => {
         const convA = parseNumber(a.convert);
         const convB = parseNumber(b.convert);
-        return convB - convA;
+        const balA = getEmployeeBalance(a, RATE_TEAM_TRAINER);
+        const balB = getEmployeeBalance(b, RATE_TEAM_TRAINER);
+        
+        // Literal interpretation: "Convert plus Balance"
+        return (convB + balB) - (convA + balA);
       });
   }, [teamTrainers]);
 
   return (
     <div
       id={id}
-      className="bg-white text-slate-900 mx-auto p-6 md:p-10 shadow-lg border border-slate-300 print-container"
+      className="bg-white text-slate-900 mx-auto p-6 md:p-10 print-container"
       style={{
         maxWidth: '1080px',
         width: '100%',
@@ -212,26 +221,30 @@ export const OfficialSalaryDocument: React.FC<OfficialSalaryDocumentProps> = ({
           </span>
         </div>
 
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto no-scrollbar">
           {/* Authentic Excel Table with Uniform 1px Clean Borders Across All Cells */}
-          <table className="w-full text-xs text-left border-collapse border border-slate-300">
+          <table 
+            className="w-full text-xs text-left border-collapse"
+            style={{ border: '1.5px solid #64748b', borderCollapse: 'collapse' }}
+          >
             <thead>
               <tr className="text-[11px] font-bold uppercase tracking-wider text-center">
-                <th className="py-2.5 px-2 border border-slate-300 w-12 bg-[#334155] text-white">NO</th>
-                <th className="py-2.5 px-3 border border-slate-300 text-left bg-[#1e293b] text-white min-w-[190px]">EMPLOYEE NAME</th>
-                <th className="py-2.5 px-2 border border-slate-300 w-24 bg-[#1d4ed8] text-white">CONVERT</th>
-                <th className="py-2.5 px-3 border border-slate-300 w-28 bg-[#0284c7] text-white">BALANCE</th>
-                <th className="py-2.5 px-2 border border-slate-300 w-20 bg-[#64748b] text-white">TARGET</th>
-                <th className="py-2.5 px-2 border border-slate-300 w-20 bg-[#d97706] text-white">BONUS</th>
-                <th className="py-2.5 px-3 border border-slate-300 w-24 bg-[#7c3aed] text-white">INCENTIVE</th>
-                <th className="py-2.5 px-2 border border-slate-300 w-20 bg-[#dc2626] text-white font-black">FINE</th>
-                <th className="py-2.5 px-4 border border-slate-300 w-32 bg-[#059669] text-white font-black">TOTAL AMOUNT</th>
+                <th className="py-2.5 px-2 w-12 text-white" style={{ backgroundColor: '#334155', border: '1px solid #64748b' }}>NO</th>
+                <th className="py-2.5 px-3 text-left text-white min-w-[190px]" style={{ backgroundColor: '#1e293b', border: '1px solid #64748b' }}>EMPLOYEE NAME</th>
+                <th className="py-2.5 px-2 w-24 text-white" style={{ backgroundColor: '#1d4ed8', border: '1px solid #64748b' }}>CONVERT</th>
+                <th className="py-2.5 px-3 w-28 text-white" style={{ backgroundColor: '#0284c7', border: '1px solid #64748b' }}>BALANCE</th>
+                <th className="py-2.5 px-2 w-20 text-white" style={{ backgroundColor: '#64748b', border: '1px solid #64748b' }}>TARGET</th>
+                <th className="py-2.5 px-2 w-20 text-white" style={{ backgroundColor: '#d97706', border: '1px solid #64748b' }}>BONUS</th>
+                <th className="py-2.5 px-3 w-24 text-white" style={{ backgroundColor: '#7c3aed', border: '1px solid #64748b' }}>INCENTIVE</th>
+                <th className="py-2.5 px-2 text-white font-black" style={{ backgroundColor: '#dc2626', border: '1px solid #64748b' }}>FINE</th>
+                <th className="py-2.5 px-4 w-32 text-white font-black" style={{ backgroundColor: '#059669', border: '1px solid #64748b' }}>TOTAL AMOUNT</th>
               </tr>
             </thead>
             <tbody>
               {processedLeaders.map((emp, index) => {
                 const balance = getEmployeeBalance(emp, RATE_TEAM_LEADER);
-                const totalAmount = getEmployeeTotalAmount(emp, RATE_TEAM_LEADER);
+                const incentiveVal = getEmployeeIncentive(emp, 'leader');
+                const totalAmount = getEmployeeTotalAmount(emp, RATE_TEAM_LEADER, 'leader');
                 const bonusVal = parseNumber(emp.bonus);
                 const fineVal = parseNumber(emp.fine);
 
@@ -240,33 +253,33 @@ export const OfficialSalaryDocument: React.FC<OfficialSalaryDocumentProps> = ({
                     key={emp.id || index}
                     className="hover:bg-slate-100/60 transition-colors font-medium text-slate-800"
                   >
-                    {/* NO - Crisp Gray Excel Box (Uniform 1px border) */}
-                    <td className="py-2 px-2 text-center border border-slate-300 font-bold text-slate-700 bg-[#f1f5f9]">
+                    {/* NO - Crisp Gray Excel Box */}
+                    <td className="py-2 px-2 text-center font-bold text-slate-700" style={{ backgroundColor: '#f1f5f9', border: '1px solid #64748b' }}>
                       {index + 1}
                     </td>
 
-                    {/* NAME - Distinct Peach Box (Uniform 1px border) */}
-                    <td className="py-2 px-3 border border-slate-300 bg-[#fffbf2] text-slate-950 font-extrabold tracking-wide uppercase">
+                    {/* NAME - Distinct Peach Box */}
+                    <td className="py-2 px-3 text-slate-950 font-extrabold tracking-wide uppercase" style={{ backgroundColor: '#fffbf2', border: '1px solid #64748b' }}>
                       {emp.name || <span className="text-slate-400 italic font-normal">Empty</span>}
                     </td>
 
-                    {/* CONVERT - Ice Blue Box (Uniform 1px border) */}
-                    <td className="py-2 px-2 text-center border border-slate-300 font-bold text-blue-950 tabular-nums bg-[#eff6ff]">
+                    {/* CONVERT - Ice Blue Box */}
+                    <td className="py-2 px-2 text-center font-bold text-blue-950 tabular-nums" style={{ backgroundColor: '#eff6ff', border: '1px solid #64748b' }}>
                       {emp.convert === '' ? 0 : emp.convert}
                     </td>
 
-                    {/* BALANCE - Sky Cyan Box (Uniform 1px border) */}
-                    <td className="py-2 px-3 text-right border border-slate-300 tabular-nums font-extrabold text-sky-950 bg-[#e0f2fe]">
+                    {/* BALANCE - Sky Cyan Box */}
+                    <td className="py-2 px-3 text-right tabular-nums font-extrabold text-sky-950" style={{ backgroundColor: '#e0f2fe', border: '1px solid #64748b' }}>
                       {formatBDT(balance)}
                     </td>
 
-                    {/* TARGET - Clean Slate Box (Uniform 1px border) */}
-                    <td className="py-2 px-2 text-center border border-slate-300 tabular-nums text-slate-700 bg-[#f8fafc]">
+                    {/* TARGET - Clean Slate Box */}
+                    <td className="py-2 px-2 text-center tabular-nums text-slate-700" style={{ backgroundColor: '#f8fafc', border: '1px solid #64748b' }}>
                       {emp.target === '' ? '-' : emp.target}
                     </td>
 
-                    {/* BONUS - Golden Amber Box (Uniform 1px border) */}
-                    <td className="py-2 px-2 text-center border border-slate-300 tabular-nums font-bold text-amber-950 bg-[#fef3c7]">
+                    {/* BONUS - Golden Amber Box */}
+                    <td className="py-2 px-2 text-center tabular-nums font-bold text-amber-950" style={{ backgroundColor: '#fef3c7', border: '1px solid #64748b' }}>
                       {bonusVal > 0 ? (
                         <span>{formatBDT(bonusVal)}</span>
                       ) : (
@@ -274,15 +287,13 @@ export const OfficialSalaryDocument: React.FC<OfficialSalaryDocumentProps> = ({
                       )}
                     </td>
 
-                    {/* INCENTIVE - Violet Box (Uniform 1px border) */}
-                    <td className="py-2 px-3 text-right border border-slate-300 tabular-nums font-bold text-purple-950 bg-[#f3e8ff]">
-                      {emp.incentive === '' || parseNumber(emp.incentive) === 0
-                        ? '-'
-                        : formatBDT(emp.incentive)}
+                    {/* INCENTIVE - Violet Box */}
+                    <td className="py-2 px-3 text-right tabular-nums font-bold text-purple-950" style={{ backgroundColor: '#f3e8ff', border: '1px solid #64748b' }}>
+                      {incentiveVal === 0 ? '-' : formatBDT(incentiveVal)}
                     </td>
 
-                    {/* FINE - Soft Red Cell Box (Uniform 1px border, similar to all cells) */}
-                    <td className="py-2 px-2 text-center border border-slate-300 tabular-nums font-black text-red-700 bg-[#fee2e2]">
+                    {/* FINE - Soft Red Cell Box */}
+                    <td className="py-2 px-2 text-center tabular-nums font-black text-red-700" style={{ backgroundColor: '#fee2e2', border: '1px solid #64748b' }}>
                       {fineVal > 0 ? (
                         <span>-{formatBDT(fineVal)}</span>
                       ) : (
@@ -290,8 +301,8 @@ export const OfficialSalaryDocument: React.FC<OfficialSalaryDocumentProps> = ({
                       )}
                     </td>
 
-                    {/* TOTAL AMOUNT - Soft Emerald Box (Uniform 1px border, similar to all cells) */}
-                    <td className="py-2 px-4 text-right font-black text-emerald-950 tabular-nums bg-[#dcfce7] border border-slate-300 text-sm">
+                    {/* TOTAL AMOUNT - Soft Emerald Box */}
+                    <td className="py-2 px-4 text-right font-black text-emerald-950 tabular-nums text-sm" style={{ backgroundColor: '#dcfce7', border: '1px solid #64748b' }}>
                       ৳ {formatBDT(totalAmount)}
                     </td>
                   </tr>
@@ -319,26 +330,30 @@ export const OfficialSalaryDocument: React.FC<OfficialSalaryDocumentProps> = ({
           </span>
         </div>
 
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto no-scrollbar">
           {/* Authentic Excel Table with Uniform 1px Clean Borders Across All Cells */}
-          <table className="w-full text-xs text-left border-collapse border border-slate-300">
+          <table 
+            className="w-full text-xs text-left border-collapse"
+            style={{ border: '1.5px solid #334155', borderCollapse: 'collapse' }}
+          >
             <thead>
               <tr className="text-[11px] font-bold uppercase tracking-wider text-center">
-                <th className="py-2.5 px-2 border border-slate-300 w-12 bg-[#334155] text-white">NO</th>
-                <th className="py-2.5 px-3 border border-slate-300 text-left bg-[#1e293b] text-white min-w-[190px]">EMPLOYEE NAME</th>
-                <th className="py-2.5 px-2 border border-slate-300 w-24 bg-[#1d4ed8] text-white">CONVERT</th>
-                <th className="py-2.5 px-3 border border-slate-300 w-28 bg-[#0284c7] text-white">BALANCE</th>
-                <th className="py-2.5 px-2 border border-slate-300 w-20 bg-[#64748b] text-white">TARGET</th>
-                <th className="py-2.5 px-2 border border-slate-300 w-20 bg-[#d97706] text-white">BONUS</th>
-                <th className="py-2.5 px-3 border border-slate-300 w-24 bg-[#7c3aed] text-white">INCENTIVE</th>
-                <th className="py-2.5 px-2 border border-slate-300 w-20 bg-[#dc2626] text-white font-black">FINE</th>
-                <th className="py-2.5 px-4 border border-slate-300 w-32 bg-[#059669] text-white font-black">TOTAL AMOUNT</th>
+                <th className="py-2.5 px-2 w-12 text-white" style={{ backgroundColor: '#334155', border: '1px solid #334155' }}>NO</th>
+                <th className="py-2.5 px-3 text-left text-white min-w-[190px]" style={{ backgroundColor: '#1e293b', border: '1px solid #334155' }}>EMPLOYEE NAME</th>
+                <th className="py-2.5 px-2 w-24 text-white" style={{ backgroundColor: '#1d4ed8', border: '1px solid #334155' }}>CONVERT</th>
+                <th className="py-2.5 px-3 w-28 text-white" style={{ backgroundColor: '#0284c7', border: '1px solid #334155' }}>BALANCE</th>
+                <th className="py-2.5 px-2 w-20 text-white" style={{ backgroundColor: '#64748b', border: '1px solid #334155' }}>TARGET</th>
+                <th className="py-2.5 px-2 w-20 text-white" style={{ backgroundColor: '#d97706', border: '1px solid #334155' }}>BONUS</th>
+                <th className="py-2.5 px-3 w-24 text-white" style={{ backgroundColor: '#7c3aed', border: '1px solid #334155' }}>INCENTIVE</th>
+                <th className="py-2.5 px-2 text-white font-black" style={{ backgroundColor: '#dc2626', border: '1px solid #334155' }}>FINE</th>
+                <th className="py-2.5 px-4 w-32 text-white font-black" style={{ backgroundColor: '#059669', border: '1px solid #334155' }}>TOTAL AMOUNT</th>
               </tr>
             </thead>
             <tbody>
               {processedTrainers.map((emp, index) => {
                 const balance = getEmployeeBalance(emp, RATE_TEAM_TRAINER);
-                const totalAmount = getEmployeeTotalAmount(emp, RATE_TEAM_TRAINER);
+                const incentiveVal = getEmployeeIncentive(emp, 'trainer');
+                const totalAmount = getEmployeeTotalAmount(emp, RATE_TEAM_TRAINER, 'trainer');
                 const bonusVal = parseNumber(emp.bonus);
                 const fineVal = parseNumber(emp.fine);
 
@@ -347,33 +362,33 @@ export const OfficialSalaryDocument: React.FC<OfficialSalaryDocumentProps> = ({
                     key={emp.id || index}
                     className="hover:bg-slate-100/60 transition-colors font-medium text-slate-800"
                   >
-                    {/* NO - Crisp Gray Excel Box (Uniform 1px border) */}
-                    <td className="py-2 px-2 text-center border border-slate-300 font-bold text-slate-700 bg-[#f1f5f9]">
+                    {/* NO - Crisp Gray Excel Box */}
+                    <td className="py-2 px-2 text-center font-bold text-slate-700" style={{ backgroundColor: '#f1f5f9', border: '1px solid #334155' }}>
                       {index + 1}
                     </td>
 
-                    {/* NAME - Distinct Mint Box (Uniform 1px border) */}
-                    <td className="py-2 px-3 border border-slate-300 bg-[#f0fdf4] text-slate-950 font-extrabold tracking-wide uppercase">
+                    {/* NAME - Distinct Mint Box */}
+                    <td className="py-2 px-3 text-slate-950 font-extrabold tracking-wide uppercase" style={{ backgroundColor: '#f0fdf4', border: '1px solid #334155' }}>
                       {emp.name || <span className="text-slate-400 italic font-normal">Empty</span>}
                     </td>
 
-                    {/* CONVERT - Ice Blue Box (Uniform 1px border) */}
-                    <td className="py-2 px-2 text-center border border-slate-300 font-bold text-blue-950 tabular-nums bg-[#eff6ff]">
+                    {/* CONVERT - Ice Blue Box */}
+                    <td className="py-2 px-2 text-center font-bold text-blue-950 tabular-nums" style={{ backgroundColor: '#eff6ff', border: '1px solid #334155' }}>
                       {emp.convert === '' ? 0 : emp.convert}
                     </td>
 
-                    {/* BALANCE - Sky Cyan Box (Uniform 1px border) */}
-                    <td className="py-2 px-3 text-right border border-slate-300 tabular-nums font-extrabold text-sky-950 bg-[#e0f2fe]">
+                    {/* BALANCE - Sky Cyan Box */}
+                    <td className="py-2 px-3 text-right tabular-nums font-extrabold text-sky-950" style={{ backgroundColor: '#e0f2fe', border: '1px solid #334155' }}>
                       {formatBDT(balance)}
                     </td>
 
-                    {/* TARGET - Clean Slate Box (Uniform 1px border) */}
-                    <td className="py-2 px-2 text-center border border-slate-300 tabular-nums text-slate-700 bg-[#f8fafc]">
+                    {/* TARGET - Clean Slate Box */}
+                    <td className="py-2 px-2 text-center tabular-nums text-slate-700" style={{ backgroundColor: '#f8fafc', border: '1px solid #334155' }}>
                       {emp.target === '' ? '-' : emp.target}
                     </td>
 
-                    {/* BONUS - Golden Amber Box (Uniform 1px border) */}
-                    <td className="py-2 px-2 text-center border border-slate-300 tabular-nums font-bold text-amber-950 bg-[#fef3c7]">
+                    {/* BONUS - Golden Amber Box */}
+                    <td className="py-2 px-2 text-center tabular-nums font-bold text-amber-950" style={{ backgroundColor: '#fef3c7', border: '1px solid #334155' }}>
                       {bonusVal > 0 ? (
                         <span>{formatBDT(bonusVal)}</span>
                       ) : (
@@ -381,15 +396,13 @@ export const OfficialSalaryDocument: React.FC<OfficialSalaryDocumentProps> = ({
                       )}
                     </td>
 
-                    {/* INCENTIVE - Violet Box (Uniform 1px border) */}
-                    <td className="py-2 px-3 text-right border border-slate-300 tabular-nums font-bold text-purple-950 bg-[#f3e8ff]">
-                      {emp.incentive === '' || parseNumber(emp.incentive) === 0
-                        ? '-'
-                        : formatBDT(emp.incentive)}
+                    {/* INCENTIVE - Violet Box */}
+                    <td className="py-2 px-3 text-right tabular-nums font-bold text-purple-950" style={{ backgroundColor: '#f3e8ff', border: '1px solid #334155' }}>
+                      {incentiveVal === 0 ? '-' : formatBDT(incentiveVal)}
                     </td>
 
-                    {/* FINE - Soft Red Cell Box (Uniform 1px border, similar to all cells) */}
-                    <td className="py-2 px-2 text-center border border-slate-300 tabular-nums font-black text-red-700 bg-[#fee2e2]">
+                    {/* FINE - Soft Red Cell Box */}
+                    <td className="py-2 px-2 text-center tabular-nums font-black text-red-700" style={{ backgroundColor: '#fee2e2', border: '1px solid #334155' }}>
                       {fineVal > 0 ? (
                         <span>-{formatBDT(fineVal)}</span>
                       ) : (
@@ -397,8 +410,8 @@ export const OfficialSalaryDocument: React.FC<OfficialSalaryDocumentProps> = ({
                       )}
                     </td>
 
-                    {/* TOTAL AMOUNT - Soft Emerald Box (Uniform 1px border, similar to all cells) */}
-                    <td className="py-2 px-4 text-right font-black text-emerald-950 tabular-nums bg-[#dcfce7] border border-slate-300 text-sm">
+                    {/* TOTAL AMOUNT - Soft Emerald Box */}
+                    <td className="py-2 px-4 text-right font-black text-emerald-950 tabular-nums text-sm" style={{ backgroundColor: '#dcfce7', border: '1px solid #334155' }}>
                       ৳ {formatBDT(totalAmount)}
                     </td>
                   </tr>

@@ -5,6 +5,8 @@ import {
   RATE_TEAM_TRAINER,
   calculateSectionTotals,
   getEmployeeBalance,
+  getEmployeeIncentive,
+  calculateAutoIncentive,
   getEmployeeTotalAmount,
   formatBDT,
   parseNumber,
@@ -56,6 +58,10 @@ export const AdminTableEditor: React.FC<AdminTableEditorProps> = ({
         const conv = parseNumber(currentEmp.convert);
         currentEmp.balance = conv === 0 ? '' : conv * effectiveRate;
       }
+      // Auto-update incentive based on target rules if not manually overridden
+      if (!currentEmp.isIncentiveOverridden) {
+        currentEmp.incentive = calculateAutoIncentive(currentEmp.convert, currentEmp.target, role);
+      }
     } else if (field === 'balance') {
       if (value === '') {
         currentEmp.balance = '';
@@ -66,10 +72,22 @@ export const AdminTableEditor: React.FC<AdminTableEditorProps> = ({
       }
     } else if (field === 'target') {
       currentEmp.target = value === '' ? '' : Math.max(0, Number(value));
+      // Auto-update incentive when target is entered/changed if not manually overridden
+      if (!currentEmp.isIncentiveOverridden) {
+        currentEmp.incentive = calculateAutoIncentive(currentEmp.convert, currentEmp.target, role);
+      }
     } else if (field === 'bonus') {
       currentEmp.bonus = value === '' ? '' : Math.max(0, Number(value));
     } else if (field === 'incentive') {
-      currentEmp.incentive = value === '' ? '' : Math.max(0, Number(value));
+      if (value === '') {
+        currentEmp.incentive = '';
+        currentEmp.isIncentiveOverridden = false;
+        // Reset to auto-calculated incentive
+        currentEmp.incentive = calculateAutoIncentive(currentEmp.convert, currentEmp.target, role);
+      } else {
+        currentEmp.incentive = Math.max(0, Number(value));
+        currentEmp.isIncentiveOverridden = true;
+      }
     } else if (field === 'fine') {
       currentEmp.fine = value === '' ? '' : Math.max(0, Number(value));
     }
@@ -84,6 +102,15 @@ export const AdminTableEditor: React.FC<AdminTableEditorProps> = ({
     const conv = parseNumber(currentEmp.convert);
     currentEmp.balance = conv * effectiveRate;
     currentEmp.isBalanceOverridden = false;
+    updated[index] = currentEmp;
+    onUpdateEmployees(updated);
+  };
+
+  const handleResetIncentiveToAuto = (index: number) => {
+    const updated = [...employees];
+    const currentEmp = { ...updated[index] };
+    currentEmp.incentive = calculateAutoIncentive(currentEmp.convert, currentEmp.target, role);
+    currentEmp.isIncentiveOverridden = false;
     updated[index] = currentEmp;
     onUpdateEmployees(updated);
   };
@@ -107,6 +134,7 @@ export const AdminTableEditor: React.FC<AdminTableEditorProps> = ({
       target: '',
       bonus: '',
       incentive: '',
+      isIncentiveOverridden: false,
       fine: '',
     };
 
@@ -176,11 +204,15 @@ export const AdminTableEditor: React.FC<AdminTableEditorProps> = ({
   const sortedRows = [...filteredIndices].sort((a, b) => {
     const convA = parseNumber(a.emp.convert);
     const convB = parseNumber(b.emp.convert);
-    return convB - convA;
+    const balA = getEmployeeBalance(a.emp, effectiveRate);
+    const balB = getEmployeeBalance(b.emp, effectiveRate);
+    
+    // Literal interpretation: "Convert plus Balance"
+    return (convB + balB) - (convA + balA);
   });
 
   return (
-    <div className="bg-white rounded-xl shadow-md border-2 border-slate-400 overflow-hidden mb-8">
+    <div className="bg-white rounded-xl shadow-md overflow-hidden mb-8">
       {/* Top Banner with Excel Workbook Feel */}
       <div
         className={`px-5 py-3.5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b-2 ${
@@ -285,7 +317,7 @@ export const AdminTableEditor: React.FC<AdminTableEditorProps> = ({
       )}
 
       {/* Spreadsheet Grid Table with 4-Sided Cell Boxes */}
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto no-scrollbar">
         <table ref={tableRef} className="w-full text-left border-collapse border-2 border-slate-500 min-w-[1020px]">
           <thead>
             {/* Column Category & Letter Row (Like Excel Columns A, B, C...) */}
@@ -317,13 +349,13 @@ export const AdminTableEditor: React.FC<AdminTableEditorProps> = ({
                 BALANCE <span className="block text-[10px] font-normal text-sky-200">(Auto / Edit)</span>
               </th>
               <th className="py-2.5 px-2 w-24 text-center border border-slate-500 bg-[#64748b] text-white">
-                TARGET <span className="block text-[10px] font-normal text-slate-200">(Input)</span>
+                TARGET <span className="block text-[10px] font-normal text-slate-200">(Goal)</span>
               </th>
               <th className="py-2.5 px-2 w-24 text-center border border-slate-500 bg-[#d97706] text-white">
                 BONUS <span className="block text-[10px] font-normal text-amber-200">(Input)</span>
               </th>
-              <th className="py-2.5 px-3 w-28 text-center border border-slate-500 bg-[#7c3aed] text-white">
-                INCENTIVE <span className="block text-[10px] font-normal text-purple-200">(Input)</span>
+              <th className="py-2.5 px-3 w-32 text-center border border-slate-500 bg-[#7c3aed] text-white">
+                INCENTIVE <span className="block text-[9.5px] font-normal text-purple-200">{isLeader ? '(≥Tgt: ৳1000 | < : ×10)' : '(≥Tgt: ৳500 | < : ×10)'}</span>
               </th>
               <th className="py-2.5 px-2 w-24 text-center border border-slate-500 bg-[#dc2626] text-white font-black">
                 FINE <span className="block text-[10px] font-normal text-rose-200">(- Penalty)</span>
@@ -377,7 +409,11 @@ export const AdminTableEditor: React.FC<AdminTableEditorProps> = ({
             ) : (
               sortedRows.map(({ emp, index }, displayIdx) => {
                 const autoBalance = parseNumber(emp.convert) * effectiveRate;
-                const totalAmount = getEmployeeTotalAmount(emp, effectiveRate);
+                const autoIncentive = calculateAutoIncentive(emp.convert, emp.target, role);
+                const convVal = parseNumber(emp.convert);
+                const targetVal = parseNumber(emp.target);
+                const isTargetMet = targetVal > 0 && convVal >= targetVal;
+                const totalAmount = getEmployeeTotalAmount(emp, effectiveRate, role);
 
                 return (
                   <tr
@@ -449,7 +485,7 @@ export const AdminTableEditor: React.FC<AdminTableEditorProps> = ({
                       </div>
                     </td>
 
-                    {/* TARGET - Cell Box with Input */}
+                    {/* TARGET - Cell Box with Input & Target Goal Status */}
                     <td className="p-1.5 border border-slate-400 bg-[#f8fafc]">
                       <input
                         type="number"
@@ -457,9 +493,22 @@ export const AdminTableEditor: React.FC<AdminTableEditorProps> = ({
                         value={emp.target === 0 || emp.target === '' ? '' : emp.target}
                         onFocus={(e) => e.target.select()}
                         onChange={(e) => handleFieldChange(index, 'target', e.target.value)}
-                        placeholder=""
-                        className="w-full px-2 py-1.5 text-xs text-center rounded border border-slate-300 bg-white text-slate-800 focus:border-slate-500 focus:ring-1 focus:ring-slate-400"
+                        placeholder="Target"
+                        className={`w-full px-2 py-1.5 text-xs text-center rounded border transition-colors ${
+                          isTargetMet
+                            ? 'border-emerald-400 bg-emerald-50/70 text-emerald-950 font-black ring-1 ring-emerald-300'
+                            : 'border-slate-300 bg-white text-slate-800 font-bold focus:border-slate-500 focus:ring-1 focus:ring-slate-400'
+                        }`}
                       />
+                      {targetVal > 0 && (
+                        <div className="text-[9.5px] text-center font-bold mt-0.5">
+                          {isTargetMet ? (
+                            <span className="text-emerald-700 font-black">✓ Target Met</span>
+                          ) : (
+                            <span className="text-slate-500">Need {Math.max(0, targetVal - convVal)}</span>
+                          )}
+                        </div>
+                      )}
                     </td>
 
                     {/* BONUS - Cell Box with Input */}
@@ -475,17 +524,46 @@ export const AdminTableEditor: React.FC<AdminTableEditorProps> = ({
                       />
                     </td>
 
-                    {/* INCENTIVE - Cell Box with Input */}
+                    {/* INCENTIVE - Cell Box with Auto/Manual Input & Rule Indicator */}
                     <td className="p-1.5 border border-slate-400 bg-[#ede9fe]">
-                      <input
-                        type="number"
-                        min="0"
-                        value={emp.incentive === 0 || emp.incentive === '' ? '' : emp.incentive}
-                        onFocus={(e) => e.target.select()}
-                        onChange={(e) => handleFieldChange(index, 'incentive', e.target.value)}
-                        placeholder=""
-                        className="w-full px-2 py-1.5 text-xs text-right font-bold rounded border border-purple-300 bg-white text-purple-950 focus:border-purple-600 focus:ring-1 focus:ring-purple-500"
-                      />
+                      <div className="flex items-center gap-1">
+                        <input
+                          type="number"
+                          min="0"
+                          value={emp.incentive === 0 || emp.incentive === '' ? '' : emp.incentive}
+                          onFocus={(e) => e.target.select()}
+                          onChange={(e) => handleFieldChange(index, 'incentive', e.target.value)}
+                          placeholder={autoIncentive !== '' ? String(autoIncentive) : ''}
+                          className={`w-full px-2 py-1.5 text-xs font-bold text-right rounded border transition-colors ${
+                            emp.isIncentiveOverridden
+                              ? 'border-amber-400 bg-amber-50 text-amber-950 focus:ring-1 focus:ring-amber-500'
+                              : 'border-purple-300 bg-white text-purple-950 focus:border-purple-600 focus:ring-1 focus:ring-purple-500'
+                          }`}
+                        />
+                        {emp.isIncentiveOverridden && (
+                          <button
+                            type="button"
+                            title="Reset to automatic incentive (Target Met: ৳1000/৳500 or Conv × 10)"
+                            onClick={() => handleResetIncentiveToAuto(index)}
+                            className="cursor-pointer p-1 text-purple-700 hover:text-purple-900 hover:bg-purple-100 rounded"
+                          >
+                            <RotateCcw className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
+                      <div className="flex items-center justify-between text-[10px] text-purple-900 mt-0.5 px-1 font-semibold">
+                        {emp.isIncentiveOverridden ? (
+                          <span className="text-amber-800 font-bold">Manual</span>
+                        ) : isTargetMet ? (
+                          <span className="text-emerald-700 font-black">
+                            ✓ Met: {isLeader ? '৳1000' : '৳500'}
+                          </span>
+                        ) : convVal > 0 ? (
+                          <span>Auto: ৳{convVal * 10}</span>
+                        ) : (
+                          <span>Auto</span>
+                        )}
+                      </div>
                     </td>
 
                     {/* FINE - Distinct Red Cell Box with Input */}

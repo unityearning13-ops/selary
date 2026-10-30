@@ -343,8 +343,8 @@ export default function App() {
   const activeLeadersForStats = teamLeaders.filter(emp => getEmployeeBalance(emp, RATE_TEAM_LEADER) > 0);
   const activeTrainersForStats = teamTrainers.filter(emp => getEmployeeBalance(emp, RATE_TEAM_TRAINER) > 0);
   
-  const leaderTotals = calculateSectionTotals(activeLeadersForStats, RATE_TEAM_LEADER);
-  const trainerTotals = calculateSectionTotals(activeTrainersForStats, RATE_TEAM_TRAINER);
+  const leaderTotals = calculateSectionTotals(activeLeadersForStats, RATE_TEAM_LEADER, 'leader');
+  const trainerTotals = calculateSectionTotals(activeTrainersForStats, RATE_TEAM_TRAINER, 'trainer');
 
   return (
     <div className="min-h-screen bg-slate-100/90 text-slate-800 flex flex-col font-sans">
@@ -565,7 +565,7 @@ export default function App() {
             </div>
 
             {/* Official Salary Document Layout */}
-            <div className="overflow-x-auto pb-8 flex justify-center print:hidden">
+            <div className="overflow-x-auto no-scrollbar pb-8 flex justify-center print:hidden">
               <div
                 style={{
                   transform: previewScale !== 100 ? `scale(${previewScale / 100})` : 'none',
@@ -693,7 +693,7 @@ export default function App() {
             </div>
 
             {/* Scaled Editor Container */}
-            <div className="overflow-x-auto pb-6">
+            <div className="overflow-x-auto no-scrollbar pb-6">
               <div
                 style={{
                   transform: editorScale !== 100 ? `scale(${editorScale / 100})` : 'none',
@@ -774,7 +774,7 @@ export default function App() {
                 </div>
               </div>
 
-              <div className="overflow-x-auto pb-4">
+              <div className="overflow-x-auto no-scrollbar pb-4">
                 <div
                   style={{
                     transform: editorScale !== 100 ? `scale(${editorScale / 100})` : 'none',
@@ -828,7 +828,7 @@ export default function App() {
                 </div>
               </div>
 
-              <div className="overflow-x-auto pb-8 print:hidden">
+              <div className="overflow-x-auto no-scrollbar pb-8 print:hidden">
                 <OfficialSalaryDocument
                   teamLeaders={teamLeaders}
                   teamTrainers={teamTrainers}

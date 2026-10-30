@@ -34,9 +34,15 @@ export const ReferenceViewerModal: React.FC<ReferenceViewerModalProps> = ({
               <Calculator className="w-4 h-4 text-blue-600" />
               1. Team Leader Rules
             </h3>
-            <ul className="list-disc pl-5 space-y-1 text-xs text-blue-900 font-medium">
+            <ul className="list-disc pl-5 space-y-1.5 text-xs text-blue-900 font-medium">
               <li><strong>Conversion Rate:</strong> 1 Convert = 60 BDT</li>
               <li><strong>Balance Formula:</strong> Balance = Convert × 60 (auto-calculated, manually editable)</li>
+              <li><strong>Target & Incentive Rule:</strong>
+                <ul className="list-circle pl-4 mt-0.5 space-y-0.5 text-slate-800">
+                  <li>Convert ≥ Target: Incentive স্বয়ংক্রিয়ভাবে <strong>৳১,০০০</strong> যোগ হবে।</li>
+                  <li>Convert &lt; Target: Incentive স্বয়ংক্রিয়ভাবে <strong>Convert × ১০</strong> টাকা যোগ হবে।</li>
+                </ul>
+              </li>
               <li><strong>Total Formula:</strong> Balance + Bonus + Incentive - Fine</li>
               <li><strong>Header Style:</strong> Classic Corporate Deep Blue with peach name column</li>
             </ul>
@@ -47,9 +53,15 @@ export const ReferenceViewerModal: React.FC<ReferenceViewerModalProps> = ({
               <Calculator className="w-4 h-4 text-emerald-600" />
               2. Team Trainer Rules
             </h3>
-            <ul className="list-disc pl-5 space-y-1 text-xs text-emerald-900 font-medium">
+            <ul className="list-disc pl-5 space-y-1.5 text-xs text-emerald-900 font-medium">
               <li><strong>Conversion Rate:</strong> 1 Convert = 50 BDT</li>
               <li><strong>Balance Formula:</strong> Balance = Convert × 50 (auto-calculated, manually editable)</li>
+              <li><strong>Target & Incentive Rule:</strong>
+                <ul className="list-circle pl-4 mt-0.5 space-y-0.5 text-slate-800">
+                  <li>Convert ≥ Target: Incentive স্বয়ংক্রিয়ভাবে <strong>৳৫০০</strong> যোগ হবে।</li>
+                  <li>Convert &lt; Target: Incentive স্বয়ংক্রিয়ভাবে <strong>Convert × ১০</strong> টাকা যোগ হবে।</li>
+                </ul>
+              </li>
               <li><strong>Total Formula:</strong> Balance + Bonus + Incentive - Fine</li>
               <li><strong>Header Style:</strong> Forest Green with soft mint green name column</li>
             </ul>

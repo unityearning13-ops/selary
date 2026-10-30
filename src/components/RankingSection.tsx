@@ -968,9 +968,10 @@ export const RankingSection: React.FC<RankingSectionProps> = ({
           role: 'leader' as const,
         };
       })
-      // Keep all items including those with zero converts as per latest request and screenshot
-      .filter((item) => item.name.trim() !== '')
-      .sort((a, b) => b.convert - a.convert);
+      // Keep only items with convert > 0 and a valid name
+      .filter((item) => item.name.trim() !== '' && item.convert > 0)
+      // Sort by (Convert + Balance) descending
+      .sort((a, b) => (Number(b.convert) + Number(b.balance)) - (Number(a.convert) + Number(a.balance)));
   }, [teamLeaders, customLeaders]);
 
   // Compute Base Trainer list from props if not custom
@@ -993,17 +994,17 @@ export const RankingSection: React.FC<RankingSectionProps> = ({
           role: 'trainer' as const,
         };
       })
-      // Keep all items including those with zero converts
-      .filter((item) => item.name.trim() !== '')
-      .sort((a, b) => b.convert - a.convert);
+      // Keep only items with convert > 0
+      .filter((item) => item.name.trim() !== '' && item.convert > 0)
+      // Sort by (Convert + Balance) descending
+      .sort((a, b) => (Number(b.convert) + Number(b.balance)) - (Number(a.convert) + Number(a.balance)));
   }, [teamTrainers, customTrainers]);
 
   // Combined both items
   const displayBothItems = useMemo(() => {
     return [...seniorLeaders, ...effectiveLeaders, ...effectiveTrainers].sort((a, b) => {
-      // Keep seniors at top if they are in the list, or just sort by convert?
-      // In the management table, maybe we just want to see everyone.
-      return b.convert - a.convert;
+      // Sort by (Convert + Balance) descending
+      return (Number(b.convert) + Number(b.balance)) - (Number(a.convert) + Number(a.balance));
     });
   }, [seniorLeaders, effectiveLeaders, effectiveTrainers]);
 
@@ -1071,12 +1072,16 @@ export const RankingSection: React.FC<RankingSectionProps> = ({
       showToast(`সিনিয়র টিম লিডার "${name}" যুক্ত হয়েছে`);
     } else if (role === 'leader') {
       const base = customLeaders !== null ? customLeaders : effectiveLeaders;
-      const updated = [...base, newItem].sort((a, b) => b.convert - a.convert);
+      const updated = [...base, newItem]
+        .filter(item => item.convert > 0)
+        .sort((a, b) => (Number(b.convert) + Number(b.balance)) - (Number(a.convert) + Number(a.balance)));
       setCustomLeaders(updated);
       showToast(`টিম লিডার "${name}" (${convert} কনভার্ট) যুক্ত হয়েছে!`);
     } else {
       const base = customTrainers !== null ? customTrainers : effectiveTrainers;
-      const updated = [...base, newItem].sort((a, b) => b.convert - a.convert);
+      const updated = [...base, newItem]
+        .filter(item => item.convert > 0)
+        .sort((a, b) => (Number(b.convert) + Number(b.balance)) - (Number(a.convert) + Number(a.balance)));
       setCustomTrainers(updated);
       showToast(`টিম ট্রেইনার "${name}" (${convert} কনভার্ট) যুক্ত হয়েছে!`);
     }
@@ -1187,7 +1192,7 @@ export const RankingSection: React.FC<RankingSectionProps> = ({
     }
 
     const newRankingItems: RankingMemberItem[] = result.parsedItems
-      .filter((p) => !p.isZero)
+      .filter((p) => !p.isZero && p.convert > 0)
       .map((p, idx) => ({
         id: `raw-${Date.now()}-${idx}`,
         name: p.name,
@@ -1197,7 +1202,7 @@ export const RankingSection: React.FC<RankingSectionProps> = ({
         role: rawPasteRole,
         isCustom: true,
       }))
-      .sort((a, b) => b.convert - a.convert);
+      .sort((a, b) => (Number(b.convert) + Number(b.balance)) - (Number(a.convert) + Number(a.balance)));
 
     if (rawPasteRole === 'leader') {
       setCustomLeaders(newRankingItems);
@@ -1747,7 +1752,7 @@ export const RankingSection: React.FC<RankingSectionProps> = ({
             currentDateTime={currentDateTime}
             frameClasses={getContainerFrameClasses()}
             frameStyle={getContainerFrameStyle()}
-            showRoleBadge={activeTab === 'both'}
+            showRoleBadge={false}
           />
         )}
       </div>
